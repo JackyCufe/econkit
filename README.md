@@ -1,3 +1,13 @@
+---
+title: EconKit 计量经济学分析工具
+emoji: 📊
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: true
+license: mit
+---
+
 # 📊 EconKit - 计量经济学在线分析工具
 
 > 一站式实证分析平台，专为中国经管类硕博生设计
