@@ -27,15 +27,37 @@ SIGNIFICANCE_COLORS = {
 
 
 def _get_chinese_font() -> Optional[str]:
-    """检测系统中文字体，优先级：STSong > SimSun > PingFang > Heiti"""
+    """检测系统中文字体，优先级：WenQuanYi(Linux) > STSong > SimSun > PingFang"""
     candidates = [
+        "WenQuanYi Micro Hei",   # Linux/Docker（Dockerfile 已安装）
+        "WenQuanYi Zen Hei",
         "STSong", "SimSun", "Songti SC",
         "PingFang SC", "Heiti SC", "STHeiti",
-        "Arial Unicode MS", "WenQuanYi Micro Hei"
+        "Arial Unicode MS",
     ]
     available = {f.name for f in fm.fontManager.ttflist}
     for name in candidates:
         if name in available:
+            return name
+
+    # 兜底：直接扫描系统字体路径找任意 CJK 字体
+    import os
+    font_dirs = ["/usr/share/fonts", "/usr/local/share/fonts",
+                 os.path.expanduser("~/.fonts")]
+    for d in font_dirs:
+        if os.path.isdir(d):
+            for root, _, files in os.walk(d):
+                for f in files:
+                    if f.lower().endswith((".ttf", ".otf")):
+                        try:
+                            path = os.path.join(root, f)
+                            fm.fontManager.addfont(path)
+                        except Exception:
+                            pass
+    # 刷新后再查一次
+    available2 = {f.name for f in fm.fontManager.ttflist}
+    for name in candidates:
+        if name in available2:
             return name
     return None
 
