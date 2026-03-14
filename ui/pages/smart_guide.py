@@ -1,5 +1,6 @@
 """
 智能引导页：根据研究描述推荐分析方法
+步骤2 - 智能引导
 """
 from __future__ import annotations
 
@@ -9,7 +10,7 @@ from core.smart_recommender import recommend_methods, get_method_categories, Met
 
 
 # 分类颜色映射
-CATEGORY_COLORS = {
+CATEGORY_COLORS: dict[str, tuple[str, str]] = {
     "describe": ("#FDEBD0", "#784212"),
     "panel":    ("#D5EAF5", "#1A5276"),
     "causal":   ("#FADBD8", "#C0392B"),
@@ -17,7 +18,7 @@ CATEGORY_COLORS = {
     "hetero":   ("#E8DAEF", "#6C3483"),
 }
 
-CATEGORY_LABELS = {
+CATEGORY_LABELS: dict[str, str] = {
     "describe": "🔵 描述诊断",
     "panel":    "🟡 面板回归",
     "causal":   "🔴 因果推断",
@@ -25,15 +26,13 @@ CATEGORY_LABELS = {
     "hetero":   "🟣 异质性机制",
 }
 
-PRIORITY_LABELS = {1: "🔴 必须", 2: "🟡 推荐", 3: "🟢 可选"}
+PRIORITY_LABELS: dict[int, str] = {1: "🔴 必须", 2: "🟡 推荐", 3: "🟢 可选"}
 
 
 def render_smart_guide() -> None:
-    """渲染智能引导页"""
-    st.markdown("## 🤖 智能方法推荐引擎")
-    st.markdown(
-        "描述您的研究背景，系统将自动推荐最合适的计量分析路径。"
-    )
+    """渲染智能引导页（步骤2）"""
+    st.markdown("## 🤖 步骤2：智能方法推荐引擎")
+    st.markdown("描述您的研究背景，系统将自动推荐最合适的计量分析路径。")
 
     st.divider()
 
@@ -73,19 +72,25 @@ def render_smart_guide() -> None:
 
     st.divider()
 
-    # ── 推荐结果展示 ─────────────────────────────────────────────────────────
-    if "recommendations" in st.session_state:
-        _render_recommendations(st.session_state["recommendations"])
+    # ── 推荐结果 + 跳转按钮 ───────────────────────────────────────────────────
+    recommendations = st.session_state.get("recommendations", [])
+    if recommendations:
+        _render_recommendations(recommendations)
 
-        # 跳转按钮提到顶层，确保 rerun 生效
         st.divider()
-        st.markdown("**⚡ 快速跳转到分析页面**")
-        if st.button("🚀 前往实证分析", type="primary", key="goto_analysis_top"):
-            st.session_state["recommended_methods"] = [
-                rec.method_name for rec in st.session_state.get("recommendations", [])
-            ]
-            st.session_state["page"] = "📈 实证分析"
-            st.rerun()
+        # 主行动按钮：开始实证分析 →
+        col_btn, col_tip = st.columns([1, 3])
+        with col_btn:
+            if st.button("🚀 开始实证分析 →", type="primary", key="goto_analysis"):
+                st.session_state["recommended_methods"] = [
+                    rec.method_name for rec in recommendations
+                ]
+                # 步骤跳转：步骤2 → 步骤3
+                st.session_state["step"] = 3
+                st.session_state["page"] = "📈 实证分析"
+                st.rerun()
+        with col_tip:
+            st.info("💡 推荐方法已保存，进入分析页后可快速跳转到推荐方法")
 
     # ── 全部方法目录 ─────────────────────────────────────────────────────────
     st.divider()
@@ -94,12 +99,12 @@ def render_smart_guide() -> None:
 
 
 def _render_recommendations(recommendations: list[MethodRecommendation]) -> None:
-    """渲染推荐结果卡片"""
+    """渲染推荐结果卡片（每个方法一张卡，含优先级标签）"""
     st.markdown("### 🎯 推荐分析路径")
     st.markdown("按以下顺序执行可获得最完整的实证结果：")
 
     # 按优先级分组
-    priority_groups: dict[int, list] = {1: [], 2: [], 3: []}
+    priority_groups: dict[int, list[MethodRecommendation]] = {1: [], 2: [], 3: []}
     for rec in recommendations:
         priority_groups.setdefault(rec.priority, []).append(rec)
 
@@ -112,37 +117,53 @@ def _render_recommendations(recommendations: list[MethodRecommendation]) -> None
         st.markdown(f"#### {label}")
 
         for rec in group:
-            bg, text = CATEGORY_COLORS.get(rec.category, ("#F8F9FA", "#2C3E50"))
-            cat_label = CATEGORY_LABELS.get(rec.category, rec.category)
+            _render_method_card(rec)
 
-            with st.container():
-                st.markdown(
-                    f"""
-                    <div style="background:{bg}; border-left:4px solid {text};
-                                padding:0.8rem 1rem; border-radius:4px; margin-bottom:0.5rem;">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <strong style="color:{text}; font-size:1rem;">
-                                {rec.method_name}
-                            </strong>
-                            <span style="background:{text}; color:white;
-                                         padding:2px 8px; border-radius:10px; font-size:0.8rem;">
-                                {cat_label}
-                            </span>
-                        </div>
-                        <p style="margin:0.3rem 0 0 0; color:#555; font-size:0.9rem;">
-                            {rec.reason}
-                        </p>
+
+def _render_method_card(rec: MethodRecommendation) -> None:
+    """渲染单个方法推荐卡片"""
+    bg, text = CATEGORY_COLORS.get(rec.category, ("#F8F9FA", "#2C3E50"))
+    cat_label = CATEGORY_LABELS.get(rec.category, rec.category)
+    priority_badge = PRIORITY_LABELS.get(rec.priority, "")
+
+    with st.container():
+        st.markdown(
+            f"""
+            <div style="
+                background:{bg};
+                border-left:4px solid {text};
+                padding:1rem 1.2rem;
+                border-radius:8px;
+                margin-bottom:0.8rem;
+                box-shadow:0 1px 3px rgba(0,0,0,0.06);
+            ">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                    <strong style="color:{text}; font-size:1.05rem;">
+                        {rec.method_name}
+                    </strong>
+                    <div style="display:flex; gap:6px;">
+                        <span style="
+                            background:{text}; color:white;
+                            padding:2px 10px; border-radius:12px; font-size:0.78rem;
+                        ">{cat_label}</span>
+                        <span style="
+                            background:rgba(0,0,0,0.08); color:{text};
+                            padding:2px 10px; border-radius:12px; font-size:0.78rem;
+                        ">{priority_badge}</span>
                     </div>
-                    """,
-                    unsafe_allow_html=True,
-                )
+                </div>
+                <p style="margin:0; color:#555; font-size:0.9rem; line-height:1.5;">
+                    {rec.reason}
+                </p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
 
-                if rec.sub_steps:
-                    with st.expander("📋 具体步骤"):
-                        for i, step in enumerate(rec.sub_steps, 1):
-                            st.markdown(f"{i}. {step}")
-
-    # 跳转按钮已移到顶层渲染，此处不再重复
+        if rec.sub_steps:
+            with st.expander("📋 具体分析步骤"):
+                for i, step in enumerate(rec.sub_steps, 1):
+                    st.markdown(f"{i}. {step}")
 
 
 def _render_method_catalog() -> None:

@@ -19,14 +19,34 @@ from ui.components.chart_display import (
 
 
 def render_analysis() -> None:
-    """渲染实证分析页面"""
+    """渲染实证分析页面（步骤3）"""
     if "df" not in st.session_state or st.session_state["df"] is None:
         st.warning("⚠️ 请先在首页上传数据")
+        if st.button("← 返回上传数据", key="analysis_back_home"):
+            st.session_state["step"] = 1
+            st.session_state["page"] = "🏠 首页"
+            st.rerun()
         return
 
     df = st.session_state["df"]
 
-    st.markdown("## 📈 实证分析")
+    st.markdown("## 📈 步骤3：实证分析")
+
+    # ── 顶部快速操作栏（完成分析 → 生成报告）────────────────────────────────
+    top_col1, top_col2 = st.columns([3, 1])
+    with top_col1:
+        analysis_results = st.session_state.get("analysis_results", {})
+        if analysis_results:
+            n_done = len(analysis_results)
+            st.success(f"✅ 已完成 {n_done} 项分析")
+        else:
+            st.info("💡 选择下方分析方法并运行，完成后点击右侧按钮生成报告")
+    with top_col2:
+        if st.button("📄 完成分析，生成报告 →", type="primary", key="goto_report"):
+            # 步骤跳转：步骤3 → 步骤4
+            st.session_state["step"] = 4
+            st.session_state["page"] = "📄 下载报告"
+            st.rerun()
 
     # ── 推荐路径联动区域 ────────────────────────────────────────────────────────
     recommended = st.session_state.get("recommended_methods", [])

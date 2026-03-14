@@ -1,5 +1,5 @@
 """
-侧边栏导航组件
+侧边栏导航组件（辅助导航，主导航为顶部步骤条）
 """
 from __future__ import annotations
 
@@ -26,6 +26,11 @@ def render_sidebar() -> str:
         )
         st.divider()
 
+        # 步骤进度提示
+        current_step = st.session_state.get("step", 1)
+        step_labels = {1: "步骤1/4", 2: "步骤2/4", 3: "步骤3/4", 4: "步骤4/4"}
+        st.caption(f"📍 当前：{step_labels.get(current_step, '步骤1/4')}")
+
         _options = ["🏠 首页", "🤖 智能引导", "📈 实证分析", "📄 下载报告"]
         _current = st.session_state.get("page", "🏠 首页")
         _index = _options.index(_current) if _current in _options else 0
@@ -45,6 +50,11 @@ def render_sidebar() -> str:
             st.success(f"✅ 已加载数据\n{len(df)} 行 × {len(df.columns)} 列")
         else:
             st.info("💡 请先上传数据")
+
+        # 分析进度提示
+        analysis_results = st.session_state.get("analysis_results", {})
+        if analysis_results:
+            st.caption(f"🔬 已完成 {len(analysis_results)} 项分析")
 
         st.divider()
         st.markdown(

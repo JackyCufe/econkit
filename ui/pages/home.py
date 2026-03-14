@@ -1,5 +1,6 @@
 """
 首页：数据上传与预览
+步骤1 - 上传数据
 """
 from __future__ import annotations
 
@@ -17,7 +18,7 @@ from core.data_loader import (
 
 
 def render_home() -> None:
-    """渲染首页"""
+    """渲染首页（步骤1：上传数据）"""
     st.markdown(
         """
         <div style="text-align:center; padding:2rem 0 1rem 0;">
@@ -42,7 +43,7 @@ def render_home() -> None:
     st.divider()
 
     # ── 数据上传区 ────────────────────────────────────────────────────────────
-    st.markdown("## 📁 数据上传")
+    st.markdown("## 📁 步骤1：上传数据")
 
     tab1, tab2 = st.tabs(["📤 上传数据文件", "📋 使用示例数据"])
 
@@ -53,7 +54,7 @@ def render_home() -> None:
         _render_sample_data_section()
 
     # ── 数据预览 ──────────────────────────────────────────────────────────────
-    if "df" in st.session_state and st.session_state["df"] is not None:
+    if st.session_state.get("df") is not None:
         _render_data_preview()
 
 
@@ -69,7 +70,7 @@ def _render_upload_section() -> None:
         with st.spinner("正在解析数据..."):
             try:
                 df = load_dataframe(io.BytesIO(uploaded.read()), uploaded.name)
-                st.session_state["df"]       = df
+                st.session_state["df"] = df
                 st.session_state["filename"] = uploaded.name
                 st.session_state["analysis_results"] = {}
                 st.success(f"✅ 数据加载成功：{len(df)} 行 × {len(df.columns)} 列")
@@ -105,7 +106,7 @@ def _render_sample_data_section() -> None:
         if st.button("🎯 加载示例数据", type="primary"):
             with st.spinner("生成示例数据..."):
                 df = generate_sample_data()
-                st.session_state["df"]       = df
+                st.session_state["df"] = df
                 st.session_state["filename"] = "data_sample.csv"
                 st.session_state["analysis_results"] = {}
                 st.success(f"✅ 示例数据已加载：{len(df)} 行 × {len(df.columns)} 列")
@@ -128,12 +129,14 @@ def _auto_detect_panel(df: pd.DataFrame) -> None:
     panel_info = detect_panel_structure(df)
     st.session_state["panel_info"] = panel_info
 
-    id_col   = panel_info.get("id_col")
+    id_col = panel_info.get("id_col")
     time_col = panel_info.get("time_col")
 
     if id_col and time_col:
-        st.info(f"🔍 自动检测：个体变量=`{id_col}`，时间变量=`{time_col}`"
-                f"（{panel_info['n_entities']} 个实体，{panel_info['n_periods']} 期）")
+        st.info(
+            f"🔍 自动检测：个体变量=`{id_col}`，时间变量=`{time_col}`"
+            f"（{panel_info['n_entities']} 个实体，{panel_info['n_periods']} 期）"
+        )
         validation = validate_panel_data(df, id_col, time_col)
         st.session_state["validation"] = validation
 
@@ -174,9 +177,14 @@ def _render_data_preview() -> None:
         st.dataframe(col_info, use_container_width=True)
 
     # 配置面板结构
+    _render_panel_config(df)
+
+
+def _render_panel_config(df: pd.DataFrame) -> None:
+    """面板结构配置与确认按钮（跳转到步骤2）"""
     st.markdown("### ⚙️ 配置面板结构")
     panel_info = st.session_state.get("panel_info", {})
-    all_cols   = list(df.columns)
+    all_cols = list(df.columns)
 
     col_a, col_b = st.columns(2)
     with col_a:
@@ -186,13 +194,18 @@ def _render_data_preview() -> None:
         default_time = _find_idx(all_cols, panel_info.get("time_col"))
         time_col = st.selectbox("时间变量", all_cols, index=default_time, key="home_time")
 
-    if st.button("✅ 确认面板结构", type="primary"):
+    st.markdown("")  # 间距
+
+    # 主行动按钮：下一步：智能引导 →
+    if st.button("✅ 下一步：智能引导 →", type="primary", key="confirm_panel"):
         validation = validate_panel_data(df, id_col, time_col)
-        st.session_state["panel_info"]["id_col"]   = id_col
+        st.session_state["panel_info"]["id_col"] = id_col
         st.session_state["panel_info"]["time_col"] = time_col
 
         if validation["valid"]:
             st.success("✅ 面板结构配置成功！正在跳转到智能引导...")
+            # 步骤跳转：步骤1 → 步骤2
+            st.session_state["step"] = 2
             st.session_state["page"] = "🤖 智能引导"
             st.rerun()
         else:

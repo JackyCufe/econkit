@@ -21,6 +21,7 @@ from assets.academic_theme import apply_academic_theme
 apply_academic_theme()
 
 from ui.components.sidebar import render_sidebar
+from ui.components.stepper import render_stepper, STEP_TO_PAGE, PAGE_TO_STEP
 from ui.pages.home import render_home
 from ui.pages.smart_guide import render_smart_guide
 from ui.pages.analysis import render_analysis
@@ -49,16 +50,22 @@ _load_css()
 
 # ── Session 状态初始化 ────────────────────────────────────────────────────────
 def _init_session() -> None:
-    """初始化 session state 默认值"""
-    defaults = {
+    """初始化 session state 默认值，确保所有关键字段存在"""
+    defaults: dict = {
+        # 步骤状态（驱动向导式导航）
+        "step":             1,
+        "page":             "🏠 首页",
+        # 数据状态
         "df":               None,
         "filename":         None,
         "panel_info":       {},
         "validation":       {},
+        # 分析状态
         "analysis_results": {},
         "recommendations":  [],
+        "recommended_methods": [],
+        # 报告状态
         "pdf_bytes":        None,
-        "page":             "🏠 首页",
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -68,11 +75,20 @@ def _init_session() -> None:
 _init_session()
 
 
-# ── 侧边栏导航 ────────────────────────────────────────────────────────────────
-page = render_sidebar()
+# ── 侧边栏导航（保留方便跳回） ────────────────────────────────────────────────
+sidebar_page = render_sidebar()
 
-# 侧边栏选择优先，更新 session_state
-st.session_state["page"] = page
+# 侧边栏选择后同步 step，保持步骤条与侧边栏一致
+if sidebar_page != st.session_state.get("page"):
+    st.session_state["page"] = sidebar_page
+    st.session_state["step"] = PAGE_TO_STEP.get(sidebar_page, 1)
+
+current_page = st.session_state["page"]
+current_step = st.session_state["step"]
+
+
+# ── 顶部步骤进度条（所有页面内容之上） ────────────────────────────────────────
+render_stepper(current_step)
 
 
 # ── 页面路由 ──────────────────────────────────────────────────────────────────
@@ -83,7 +99,7 @@ page_router = {
     "📄 下载报告": render_report,
 }
 
-handler = page_router.get(page)
+handler = page_router.get(current_page)
 if handler:
     handler()
 else:
