@@ -24,4 +24,6 @@ CMD ["streamlit", "run", "app.py", \
      "--server.port=7860", \
      "--server.address=0.0.0.0", \
      "--server.headless=true", \
-     "--server.fileWatcherType=none"]
+     "--server.fileWatcherType=none", \
+     "--server.enableXsrfProtection=false", \
+     "--server.enableCORS=false"]
