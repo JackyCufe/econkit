@@ -1,0 +1,100 @@
+/* EconKit 自定义样式 */
+
+/* 全局字体 */
+html, body, [class*="css"] {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+}
+
+/* 主标题 */
+.main-title {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #2C3E50;
+    text-align: center;
+    margin-bottom: 0.5rem;
+}
+
+/* 副标题 */
+.sub-title {
+    font-size: 1rem;
+    color: #7F8C8D;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+/* 分析卡片 */
+.analysis-card {
+    background: #F8F9FA;
+    border-left: 4px solid #2C3E50;
+    border-radius: 4px;
+    padding: 1rem 1.2rem;
+    margin-bottom: 1rem;
+}
+
+/* 显著性标注 */
+.sig-high   { color: #E74C3C; font-weight: bold; }
+.sig-medium { color: #E67E22; font-weight: bold; }
+.sig-low    { color: #F39C12; font-weight: bold; }
+.sig-none   { color: #95A5A6; }
+
+/* 三线表 */
+.three-line-table {
+    border-top: 2px solid #2C3E50;
+    border-bottom: 2px solid #2C3E50;
+}
+.three-line-table th {
+    border-bottom: 1px solid #2C3E50;
+    background: #EBF5FB;
+    font-weight: 600;
+    color: #2C3E50;
+}
+
+/* 推荐方法标签 */
+.method-tag {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    margin: 2px;
+}
+.tag-causal   { background: #FADBD8; color: #C0392B; }
+.tag-panel    { background: #D5EAF5; color: #1A5276; }
+.tag-robust   { background: #D5F5E3; color: #1D8348; }
+.tag-hetero   { background: #E8DAEF; color: #6C3483; }
+.tag-describe { background: #FDEBD0; color: #784212; }
+
+/* 进度条颜色 */
+.stProgress > div > div > div { background-color: #2C3E50; }
+
+/* 侧边栏 */
+.css-1d391kg { background-color: #F2F3F4; }
+
+/* 按钮样式 */
+.stButton > button {
+    background-color: #2C3E50;
+    color: white;
+    border-radius: 6px;
+    border: none;
+    padding: 0.5rem 1.5rem;
+    font-weight: 600;
+    transition: background-color 0.2s;
+}
+.stButton > button:hover {
+    background-color: #1A252F;
+}
+
+/* 成功消息 */
+.success-box {
+    background: #D5F5E3;
+    border-left: 4px solid #27AE60;
+    padding: 0.8rem 1rem;
+    border-radius: 4px;
+}
+
+/* 警告消息 */
+.warning-box {
+    background: #FDEBD0;
+    border-left: 4px solid #E67E22;
+    padding: 0.8rem 1rem;
+    border-radius: 4px;
+}
