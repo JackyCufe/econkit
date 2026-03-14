@@ -20,7 +20,6 @@ import streamlit as st
 from assets.academic_theme import apply_academic_theme
 apply_academic_theme()
 
-from ui.components.sidebar import render_sidebar
 from ui.components.stepper import render_stepper, STEP_TO_PAGE, PAGE_TO_STEP
 from ui.pages.home import render_home
 from ui.pages.smart_guide import render_smart_guide
@@ -33,7 +32,7 @@ st.set_page_config(
     page_title="EconKit - 计量经济学分析工具",
     page_icon="📊",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 
@@ -74,14 +73,6 @@ def _init_session() -> None:
 
 _init_session()
 
-
-# ── 侧边栏导航（保留方便跳回） ────────────────────────────────────────────────
-sidebar_page = render_sidebar()
-
-# 侧边栏选择后同步 step，保持步骤条与侧边栏一致
-if sidebar_page != st.session_state.get("page"):
-    st.session_state["page"] = sidebar_page
-    st.session_state["step"] = PAGE_TO_STEP.get(sidebar_page, 1)
 
 current_page = st.session_state["page"]
 current_step = st.session_state["step"]
