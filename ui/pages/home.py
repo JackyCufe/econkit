@@ -192,7 +192,9 @@ def _render_data_preview() -> None:
         st.session_state["panel_info"]["time_col"] = time_col
 
         if validation["valid"]:
-            st.success("✅ 面板结构配置成功！")
+            st.success("✅ 面板结构配置成功！正在跳转到智能引导...")
+            st.session_state["page"] = "🤖 智能引导"
+            st.rerun()
         else:
             for issue in validation["issues"]:
                 st.error(f"❌ {issue}")
