@@ -77,6 +77,16 @@ def render_smart_guide() -> None:
     if "recommendations" in st.session_state:
         _render_recommendations(st.session_state["recommendations"])
 
+        # 跳转按钮提到顶层，确保 rerun 生效
+        st.divider()
+        st.markdown("**⚡ 快速跳转到分析页面**")
+        if st.button("🚀 前往实证分析", type="primary", key="goto_analysis_top"):
+            st.session_state["recommended_methods"] = [
+                rec.method_name for rec in st.session_state.get("recommendations", [])
+            ]
+            st.session_state["page"] = "📈 实证分析"
+            st.rerun()
+
     # ── 全部方法目录 ─────────────────────────────────────────────────────────
     st.divider()
     st.markdown("## 📚 全部分析方法目录")
@@ -132,16 +142,7 @@ def _render_recommendations(recommendations: list[MethodRecommendation]) -> None
                         for i, step in enumerate(rec.sub_steps, 1):
                             st.markdown(f"{i}. {step}")
 
-    # 快速跳转按钮
-    st.divider()
-    st.markdown("**⚡ 快速跳转到分析页面**")
-    if st.button("🚀 前往实证分析", type="primary"):
-        # 把推荐方法列表传递给分析页，实现路径联动
-        st.session_state["recommended_methods"] = [
-            rec.method_name for rec in st.session_state.get("recommendations", [])
-        ]
-        st.session_state["page"] = "📈 实证分析"
-        st.rerun()
+    # 跳转按钮已移到顶层渲染，此处不再重复
 
 
 def _render_method_catalog() -> None:

@@ -26,9 +26,14 @@ def render_sidebar() -> str:
         )
         st.divider()
 
+        _options = ["🏠 首页", "🤖 智能引导", "📈 实证分析", "📄 下载报告"]
+        _current = st.session_state.get("page", "🏠 首页")
+        _index = _options.index(_current) if _current in _options else 0
+
         page = st.radio(
             "🧭 导航",
-            options=["🏠 首页", "🤖 智能引导", "📈 实证分析", "📄 下载报告"],
+            options=_options,
+            index=_index,
             label_visibility="collapsed",
         )
 
