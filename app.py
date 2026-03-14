@@ -71,10 +71,8 @@ _init_session()
 # ── 侧边栏导航 ────────────────────────────────────────────────────────────────
 page = render_sidebar()
 
-# 支持从其他页面跳转
-if "page" in st.session_state and st.session_state["page"] != page:
-    page = st.session_state["page"]
-    st.session_state["page"] = page
+# 侧边栏选择优先，更新 session_state
+st.session_state["page"] = page
 
 
 # ── 页面路由 ──────────────────────────────────────────────────────────────────
