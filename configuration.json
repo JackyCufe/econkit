@@ -1,0 +1,9 @@
+{
+  "framework": "pytorch",
+  "license": "MIT",
+  "base_image": "python:3.11-slim",
+  "port": 7860,
+  "openPort": 7860,
+  "task": "text-generation",
+  "tags": ["econometrics", "panel-data", "did", "streamlit", "causal-inference"]
+}
