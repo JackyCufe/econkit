@@ -136,6 +136,10 @@ def _render_recommendations(recommendations: list[MethodRecommendation]) -> None
     st.divider()
     st.markdown("**⚡ 快速跳转到分析页面**")
     if st.button("🚀 前往实证分析", type="primary"):
+        # 把推荐方法列表传递给分析页，实现路径联动
+        st.session_state["recommended_methods"] = [
+            rec.method_name for rec in st.session_state.get("recommendations", [])
+        ]
         st.session_state["page"] = "📈 实证分析"
         st.rerun()
 

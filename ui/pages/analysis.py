@@ -28,34 +28,74 @@ def render_analysis() -> None:
 
     st.markdown("## 📈 实证分析")
 
+    # ── 推荐路径联动区域 ────────────────────────────────────────────────────────
+    recommended = st.session_state.get("recommended_methods", [])
+    # 方法名 → 下拉选项 的映射
+    _NAME_TO_OPTION: dict[str, str] = {
+        "描述统计分析": "描述统计",
+        "OLS 基准回归": "OLS 回归",
+        "固定效应模型 (FE)": "面板固定效应（FE/RE/TWFE）",
+        "双向固定效应 (TWFE)": "面板固定效应（FE/RE/TWFE）",
+        "DID 双重差分": "DID 双重差分",
+        "交错DID (Callaway-Sant'Anna)": "DID 双重差分",
+        "PSM 倾向得分匹配": "PSM 倾向得分匹配",
+        "RDD 断点回归": "RDD 断点回归",
+        "IV / 2SLS 工具变量": "IV / 2SLS",
+        "动态面板 GMM (Arellano-Bond)": "IV / 2SLS",
+        "中介效应分析": "中介效应",
+        "调节效应分析": "调节效应",
+        "分组回归": "分组回归",
+        "稳健性检验": "Bootstrap 置信区间",
+    }
+
+    default_index = 0
+    all_options = [
+        "── 🔵 描述与诊断 ──",
+        "描述统计",
+        "相关矩阵",
+        "正态性检验",
+        "VIF 多重共线性",
+        "异方差检验",
+        "── 🟡 基准回归 ──",
+        "OLS 回归",
+        "面板固定效应（FE/RE/TWFE）",
+        "Hausman 检验",
+        "── 🔴 因果推断 ──",
+        "DID 双重差分",
+        "PSM 倾向得分匹配",
+        "RDD 断点回归",
+        "IV / 2SLS",
+        "── 🟢 稳健性检验 ──",
+        "Bootstrap 置信区间",
+        "剔除特殊样本",
+        "── 🟣 异质性与机制 ──",
+        "分组回归",
+        "分位数回归",
+        "中介效应",
+        "调节效应",
+    ]
+
+    if recommended:
+        st.info(f"🎯 智能引导为你推荐了 **{len(recommended)}** 个分析方法，点击快速跳转：")
+        cols = st.columns(min(len(recommended), 4))
+        for i, name in enumerate(recommended[:8]):
+            option = _NAME_TO_OPTION.get(name)
+            if option and option in all_options:
+                with cols[i % 4]:
+                    if st.button(f"→ {option}", key=f"quick_{i}"):
+                        st.session_state["analysis_type"] = option
+                        st.rerun()
+        st.divider()
+        # 默认选中第一个推荐方法
+        first_option = _NAME_TO_OPTION.get(recommended[0])
+        if first_option and first_option in all_options:
+            default_index = all_options.index(first_option)
+
     # 分析方法选择
     analysis_type = st.selectbox(
         "🔬 选择分析方法",
-        [
-            "── 🔵 描述与诊断 ──",
-            "描述统计",
-            "相关矩阵",
-            "正态性检验",
-            "VIF 多重共线性",
-            "异方差检验",
-            "── 🟡 基准回归 ──",
-            "OLS 回归",
-            "面板固定效应（FE/RE/TWFE）",
-            "Hausman 检验",
-            "── 🔴 因果推断 ──",
-            "DID 双重差分",
-            "PSM 倾向得分匹配",
-            "RDD 断点回归",
-            "IV / 2SLS",
-            "── 🟢 稳健性检验 ──",
-            "Bootstrap 置信区间",
-            "剔除特殊样本",
-            "── 🟣 异质性与机制 ──",
-            "分组回归",
-            "分位数回归",
-            "中介效应",
-            "调节效应",
-        ],
+        all_options,
+        index=default_index,
         key="analysis_type",
     )
 
