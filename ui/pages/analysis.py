@@ -585,7 +585,7 @@ def _run_rdd(df: pd.DataFrame) -> None:
 
 # ── IV/2SLS ───────────────────────────────────────────────────────────────────
 def _run_iv(df: pd.DataFrame) -> None:
-    from analysis.causal_iv import run_iv_2sls, plot_iv_diagnostics
+    from analysis.causal_iv import run_iv_2sls
 
     st.markdown("### IV / 2SLS 工具变量回归")
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
