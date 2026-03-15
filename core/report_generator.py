@@ -14,7 +14,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import cm
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle,
-    PageBreak, KeepTogether
+    PageBreak, KeepTogether, Image as RLImage
 )
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -188,6 +188,23 @@ def _header_footer(canvas, doc) -> None:
 
 
 # ── 主生成函数 ─────────────────────────────────────────────────────────────────
+def _fig_to_image(fig, max_width: float = 15.0) -> Optional[RLImage]:
+    """将 matplotlib Figure 转为 ReportLab Image 对象"""
+    try:
+        import matplotlib.pyplot as plt
+        buf = io.BytesIO()
+        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight", facecolor="white")
+        buf.seek(0)
+        img = RLImage(buf)
+        # 按比例缩放到页面宽度
+        scale = (max_width * cm) / img.drawWidth
+        img.drawWidth  *= scale
+        img.drawHeight *= scale
+        return img
+    except Exception:
+        return None
+
+
 def generate_pdf_report(
     title: str,
     sections: list[dict],
@@ -204,6 +221,7 @@ def generate_pdf_report(
                 "content": str,          # 文字描述
                 "table_headers": list,   # 可选：表格表头
                 "table_rows": list,      # 可选：表格数据
+                "figure": plt.Figure,    # 可选：matplotlib 图表
                 "note": str,             # 可选：注释
             }
         metadata: 元数据 {"author", "data_desc", "date"}
@@ -278,6 +296,15 @@ def generate_pdf_report(
             tbl = _build_three_line_table(table_headers, table_rows)
             block.append(tbl)
             block.append(Spacer(1, 0.2*cm))
+
+        # 嵌入图表
+        figure = section.get("figure")
+        if figure is not None:
+            rl_img = _fig_to_image(figure)
+            if rl_img is not None:
+                block.append(Spacer(1, 0.3*cm))
+                block.append(rl_img)
+                block.append(Spacer(1, 0.2*cm))
 
         if note:
             block.append(Paragraph(f"注：{note}", styles["note"]))

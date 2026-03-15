@@ -5,7 +5,7 @@ DID 双重差分分析模块
 from __future__ import annotations
 
 import warnings
-from typing import Optional
+from typing import Optional, Callable
 
 import numpy as np
 import pandas as pd
@@ -280,6 +280,7 @@ def run_placebo_test(
     controls: Optional[list[str]] = None,
     n_sim: int = 1000,
     real_coef: Optional[float] = None,
+    progress_callback: Optional[Callable[[float], None]] = None,
 ) -> tuple[dict, plt.Figure]:
     """
     安慰剂检验：随机置换处理组标签，1000次模拟
@@ -291,7 +292,7 @@ def run_placebo_test(
     subset = df[[dep_var] + indep].dropna().reset_index(drop=True)
 
     placebo_coefs: list[float] = []
-    for _ in range(n_sim):
+    for i in range(n_sim):
         sim = subset.copy()
         sim["treat_fake"] = rng.permutation(sim[treat_col].values)
         sim["did_fake"]   = sim["treat_fake"] * sim[post_col]
@@ -302,6 +303,9 @@ def run_placebo_test(
         y = sim[dep_var]
         coef = sm.OLS(y, X).fit().params.get("did_fake", np.nan)
         placebo_coefs.append(float(coef))
+
+        if progress_callback and (i + 1) % max(1, n_sim // 50) == 0:
+            progress_callback((i + 1) / n_sim)
 
     placebo_arr = np.array(placebo_coefs)
 

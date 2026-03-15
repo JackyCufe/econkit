@@ -90,6 +90,7 @@ def bootstrap_confidence_interval(
     ci_level: float = 0.95,
     id_col: Optional[str] = None,
     cluster_bootstrap: bool = False,
+    progress_callback: Optional[Callable[[float], None]] = None,
 ) -> tuple[dict, plt.Figure]:
     """
     Bootstrap 自助法置信区间
@@ -105,7 +106,7 @@ def bootstrap_confidence_interval(
 
     boot_coefs: list[float] = []
 
-    for _ in range(n_bootstrap):
+    for i in range(n_bootstrap):
         if cluster_bootstrap and id_col:
             ids = subset[id_col].unique()
             sampled_ids = rng.choice(ids, size=len(ids), replace=True)
@@ -123,6 +124,9 @@ def bootstrap_confidence_interval(
             boot_coefs.append(float(coef))
         except Exception:
             continue
+
+        if progress_callback and (i + 1) % max(1, n_bootstrap // 50) == 0:
+            progress_callback((i + 1) / n_bootstrap)
 
     boot_arr = np.array([c for c in boot_coefs if not np.isnan(c)])
 

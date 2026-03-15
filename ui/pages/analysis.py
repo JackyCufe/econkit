@@ -76,15 +76,18 @@ def render_analysis() -> None:
         "正态性检验",
         "VIF 多重共线性",
         "异方差检验",
+        "自相关检验",
         "── 🟡 基准回归 ──",
         "OLS 回归",
         "面板固定效应（FE/RE/TWFE）",
         "Hausman 检验",
+        "面板单位根检验",
         "── 🔴 因果推断 ──",
         "DID 双重差分",
         "PSM 倾向得分匹配",
         "RDD 断点回归",
         "IV / 2SLS",
+        "动态面板 GMM",
         "── 🟢 稳健性检验 ──",
         "Bootstrap 置信区间",
         "剔除特殊样本",
@@ -132,13 +135,16 @@ def render_analysis() -> None:
         "正态性检验":             _run_normality,
         "VIF 多重共线性":         _run_vif,
         "异方差检验":             _run_heterosked,
+        "自相关检验":             _run_autocorrelation,
         "OLS 回归":               _run_ols,
         "面板固定效应（FE/RE/TWFE）": _run_panel_fe,
         "Hausman 检验":           _run_hausman,
+        "面板单位根检验":         _run_unit_root,
         "DID 双重差分":           _run_did,
         "PSM 倾向得分匹配":       _run_psm,
         "RDD 断点回归":           _run_rdd,
         "IV / 2SLS":              _run_iv,
+        "动态面板 GMM":           _run_gmm,
         "Bootstrap 置信区间":     _run_bootstrap,
         "剔除特殊样本":           _run_exclude_samples,
         "分组回归":               _run_subgroup,
@@ -171,7 +177,7 @@ def _run_descriptive(df: pd.DataFrame) -> None:
                                  "均值/标准差/分位数/偏度/峰度")
             fig = plot_descriptive_stats(df, cols)
             display_figure(fig, "变量分布图", "distribution.png")
-            _save_result("descriptive", {"stats_df": stats_df})
+            _save_result("descriptive", {"stats_df": stats_df}, fig)
 
 
 # ── 相关矩阵 ──────────────────────────────────────────────────────────────────
@@ -229,6 +235,30 @@ def _run_vif(df: pd.DataFrame) -> None:
                                  "VIF>10 严重共线性，VIF>5 中度共线性")
 
 
+# ── 自相关检验 ────────────────────────────────────────────────────────────────
+def _run_autocorrelation(df: pd.DataFrame) -> None:
+    from analysis.descriptive import test_autocorrelation
+
+    st.markdown("### 自相关检验（Durbin-Watson）")
+    numeric_cols = df.select_dtypes(include="number").columns.tolist()
+
+    col1, col2 = st.columns(2)
+    with col1:
+        dep_var    = st.selectbox("被解释变量", numeric_cols, key="ac_dep")
+    with col2:
+        indep_vars = st.multiselect("解释变量", [c for c in numeric_cols if c != dep_var],
+                                    key="ac_indep")
+    if not indep_vars:
+        st.info("请选择至少一个解释变量")
+        return
+
+    if st.button("▶ 运行自相关检验", type="primary"):
+        with st.spinner("检验中..."):
+            result = test_autocorrelation(df, dep_var, indep_vars)
+            display_test_result(result["durbin_watson"], "Durbin-Watson 检验", "结论")
+            st.info(f"💡 建议：{result['recommendation']}")
+
+
 # ── 异方差检验 ────────────────────────────────────────────────────────────────
 def _run_heterosked(df: pd.DataFrame) -> None:
     from analysis.descriptive import test_heteroskedasticity
@@ -248,6 +278,31 @@ def _run_heterosked(df: pd.DataFrame) -> None:
             st.markdown("**White 检验**")
             display_test_result(result["white"], "White 检验")
             st.info(f"💡 建议：{result['recommendation']}")
+
+
+# ── 面板单位根检验 ─────────────────────────────────────────────────────────────
+def _run_unit_root(df: pd.DataFrame) -> None:
+    from analysis.panel_regression import test_panel_unit_root
+
+    st.markdown("### 面板单位根检验（ADF 汇总）")
+    numeric_cols = df.select_dtypes(include="number").columns.tolist()
+    all_cols     = list(df.columns)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        test_col = st.selectbox("检验变量", numeric_cols, key="ur_col")
+    with col2:
+        id_col   = st.selectbox("个体变量", all_cols, key="ur_id")
+        time_col = st.selectbox("时间变量", all_cols, key="ur_time")
+
+    if st.button("▶ 运行单位根检验", type="primary"):
+        with st.spinner("检验中..."):
+            result = test_panel_unit_root(df, test_col, id_col, time_col)
+            if "error" in result:
+                st.error(result["error"])
+            else:
+                display_test_result(result, "面板单位根检验（ADF 汇总）", "结论")
+                st.info(f"💡 建议：{result.get('建议', '')}")
 
 
 # ── OLS 回归 ──────────────────────────────────────────────────────────────────
@@ -275,7 +330,7 @@ def _run_ols(df: pd.DataFrame) -> None:
             result = run_ols(df, dep_var, indep_vars,
                              cov_type.split("（")[0])
             display_regression_summary(result)
-            _save_result("ols", result)
+            _save_result("ols", result, None)
 
 
 # ── 面板固定效应 ──────────────────────────────────────────────────────────────
@@ -399,6 +454,9 @@ def _run_did(df: pd.DataFrame) -> None:
             if "安慰剂检验" in sub_analyses:
                 st.markdown("#### 安慰剂检验（随机置换处理组）")
                 real_coef = basic_result["did_coef"] if basic_result else None
+                _pbar = st.progress(0, text=f"安慰剂检验进行中（0/{n_sim}）...")
+                def _placebo_cb(pct: float) -> None:
+                    _pbar.progress(pct, text=f"安慰剂检验进行中（{int(pct*n_sim)}/{n_sim}）...")
                 pl_result, pl_fig = run_placebo_test(
                     df,
                     dep_var    = vars_config["dep_var"],
@@ -407,7 +465,9 @@ def _run_did(df: pd.DataFrame) -> None:
                     controls   = vars_config["controls"] or None,
                     n_sim      = n_sim,
                     real_coef  = real_coef,
+                    progress_callback = _placebo_cb,
                 )
+                _pbar.empty()
                 display_figure(pl_fig, f"安慰剂检验（{n_sim}次置换）", "placebo_test.png")
                 st.info(pl_result.get("conclusion", ""))
 
@@ -572,6 +632,52 @@ def _run_iv(df: pd.DataFrame) -> None:
                 display_test_result(result["sargan"], "Sargan 过度识别检验", "结论")
 
 
+# ── 动态面板 GMM ───────────────────────────────────────────────────────────────
+def _run_gmm(df: pd.DataFrame) -> None:
+    from analysis.panel_regression import run_dynamic_panel_gmm
+
+    st.markdown("### 动态面板 GMM（Arellano-Bond）")
+    numeric_cols = df.select_dtypes(include="number").columns.tolist()
+    all_cols     = list(df.columns)
+
+    col1, col2 = st.columns(2)
+    with col1:
+        dep_var  = st.selectbox("被解释变量（Y）", numeric_cols, key="gmm_dep")
+        id_col   = st.selectbox("个体变量", all_cols, key="gmm_id")
+    with col2:
+        indep_vars = st.multiselect(
+            "解释变量（函数自动加入 Y 的一期滞后）",
+            [c for c in numeric_cols if c != dep_var],
+            key="gmm_indep",
+        )
+        time_col = st.selectbox("时间变量", all_cols, key="gmm_time")
+
+    gmm_type = st.radio(
+        "GMM 类型",
+        ["difference（差分GMM / Arellano-Bond）", "system（系统GMM / Blundell-Bond）"],
+        horizontal=True, key="gmm_type",
+    )
+    st.info("💡 GMM 自动在模型中加入被解释变量一期滞后项（动态面板标准做法）")
+
+    if not indep_vars:
+        st.info("请选择至少一个解释变量")
+        return
+
+    if st.button("▶ 运行 GMM 估计", type="primary"):
+        with st.spinner("估计中..."):
+            result = run_dynamic_panel_gmm(
+                df, dep_var, indep_vars, id_col, time_col,
+                gmm_type=gmm_type.split("（")[0],
+            )
+            if "error" in result:
+                st.error(f"❌ {result['error']}")
+            else:
+                display_regression_summary(result)
+                if "ar_note" in result:
+                    st.warning(result["ar_note"])
+                _save_result("gmm", result)
+
+
 # ── Bootstrap ─────────────────────────────────────────────────────────────────
 def _run_bootstrap(df: pd.DataFrame) -> None:
     from analysis.robustness import bootstrap_confidence_interval
@@ -595,12 +701,17 @@ def _run_bootstrap(df: pd.DataFrame) -> None:
         return
 
     if st.button("▶ 运行 Bootstrap", type="primary"):
-        with st.spinner(f"Bootstrap 中（{n_boot}次）..."):
-            result, fig = bootstrap_confidence_interval(
-                df, dep_var, indep_vars, key_var, n_boot
-            )
-            display_figure(fig, "Bootstrap 分布", "bootstrap.png")
-            st.info(result.get("conclusion", ""))
+        _pbar = st.progress(0, text=f"Bootstrap 进行中（0/{n_boot}）...")
+        def _boot_cb(pct: float) -> None:
+            _pbar.progress(pct, text=f"Bootstrap 进行中（{int(pct*n_boot)}/{n_boot}）...")
+        result, fig = bootstrap_confidence_interval(
+            df, dep_var, indep_vars, key_var, n_boot,
+            progress_callback=_boot_cb,
+        )
+        _pbar.empty()
+        display_figure(fig, "Bootstrap 分布", "bootstrap.png")
+        st.info(result.get("conclusion", ""))
+        _save_result("bootstrap", result, fig)
 
 
 # ── 剔除特殊样本 ──────────────────────────────────────────────────────────────
@@ -727,16 +838,21 @@ def _run_mediation(df: pd.DataFrame) -> None:
     n_boot   = st.slider("Bootstrap 次数", 200, 2000, 1000, 100, key="med_boot")
 
     if st.button("▶ 运行中介效应分析", type="primary"):
-        with st.spinner(f"Bootstrap 中（{n_boot}次）..."):
-            result, fig = run_mediation_analysis(
-                df, dep_var, mediator, treatment, controls or None, n_boot
-            )
-            display_figure(fig, "中介效应路径图与Bootstrap分布", "mediation.png")
-            col_a, col_b, col_c = st.columns(3)
-            col_a.metric("间接效应（a×b）", str(result["indirect_effect"]))
-            col_b.metric("直接效应（c'）", str(result["direct_effect"]))
-            col_c.metric("中介比例", f"{result['pct_mediated']}%")
-            st.info(result.get("conclusion", ""))
+        _pbar = st.progress(0, text=f"Bootstrap 中介检验中（0/{n_boot}）...")
+        def _med_cb(pct: float) -> None:
+            _pbar.progress(pct, text=f"Bootstrap 中介检验中（{int(pct*n_boot)}/{n_boot}）...")
+        result, fig = run_mediation_analysis(
+            df, dep_var, mediator, treatment, controls or None, n_boot,
+            progress_callback=_med_cb,
+        )
+        _pbar.empty()
+        display_figure(fig, "中介效应路径图与Bootstrap分布", "mediation.png")
+        col_a, col_b, col_c = st.columns(3)
+        col_a.metric("间接效应（a×b）", str(result["indirect_effect"]))
+        col_b.metric("直接效应（c'）", str(result["direct_effect"]))
+        col_c.metric("中介比例", f"{result['pct_mediated']}%")
+        st.info(result.get("conclusion", ""))
+        _save_result("mediation", result, fig)
 
 
 # ── 调节效应 ──────────────────────────────────────────────────────────────────
@@ -775,11 +891,16 @@ def _run_moderation(df: pd.DataFrame) -> None:
             col_b.metric("标准误", str(result["interaction_se"]))
             col_c.metric("p 值", str(result["interaction_pval"]))
             st.info(result.get("conclusion", ""))
+            _save_result("moderation", result, fig)
 
 
 # ── 工具函数 ──────────────────────────────────────────────────────────────────
-def _save_result(key: str, result: dict) -> None:
-    """将分析结果保存到 session_state"""
+def _save_result(key: str, result: dict, fig=None) -> None:
+    """将分析结果保存到 session_state，可附带 figure"""
     if "analysis_results" not in st.session_state:
         st.session_state["analysis_results"] = {}
     st.session_state["analysis_results"][key] = result
+    if fig is not None:
+        if "analysis_figures" not in st.session_state:
+            st.session_state["analysis_figures"] = {}
+        st.session_state["analysis_figures"][key] = fig

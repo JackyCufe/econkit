@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Optional
+from typing import Optional, Callable
 
 import numpy as np
 import pandas as pd
@@ -192,6 +192,7 @@ def run_mediation_analysis(
     controls: Optional[list[str]] = None,
     n_bootstrap: int = 1000,
     ci_level: float = 0.95,
+    progress_callback: Optional[Callable[[float], None]] = None,
 ) -> tuple[dict, plt.Figure]:
     """
     Bootstrap 中介效应分析（Baron-Kenny 框架）
@@ -216,10 +217,12 @@ def run_mediation_analysis(
 
     # Bootstrap 间接效应
     indirect_boot: list[float] = []
-    for _ in range(n_bootstrap):
+    for i in range(n_bootstrap):
         boot_df = subset.sample(n=len(subset), replace=True, random_state=None)
         a, b, c, c_p = _estimate_paths(boot_df, dep_var, mediator, treatment, controls)
         indirect_boot.append(a * b)
+        if progress_callback and (i + 1) % max(1, n_bootstrap // 50) == 0:
+            progress_callback((i + 1) / n_bootstrap)
 
     boot_arr = np.array(indirect_boot)
     alpha = 1 - ci_level

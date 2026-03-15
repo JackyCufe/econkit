@@ -187,14 +187,24 @@ def _build_sections(
         })
 
     # 各分析结果
+    analysis_figures = st.session_state.get("analysis_figures", {})
+    key_map = {
+        "OLS 回归":       "ols",
+        "面板固定效应回归": "panel_fe",
+        "描述统计":       "descriptive",
+        "DID 双重差分":   "did",
+        "Bootstrap 置信区间": "bootstrap",
+        "中介效应":       "mediation",
+        "调节效应":       "moderation",
+        "GMM":            "gmm",
+    }
+
     for name, content in available_results:
         if name in include_sections:
             section: dict = {"title": name, "content": content}
-
-            # 尝试提取表格
-            key_map = {"OLS 回归": "ols", "面板固定效应回归": "panel_fe",
-                       "描述统计": "descriptive"}
             key = key_map.get(name)
+
+            # 提取表格
             if key and key in analysis_results:
                 res = analysis_results[key]
                 df_r = res.get("summary_df") or res.get("stats_df")
@@ -204,6 +214,10 @@ def _build_sections(
                         [str(v) for v in row]
                         for row in df_r.values.tolist()[:10]
                     ]
+
+            # 嵌入图表
+            if key and key in analysis_figures:
+                section["figure"] = analysis_figures[key]
 
             sections.append(section)
 
