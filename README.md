@@ -3,7 +3,9 @@ title: EconKit 计量经济学分析工具
 emoji: 📊
 colorFrom: blue
 colorTo: indigo
-sdk: docker
+sdk: streamlit
+sdk_version: "1.32.0"
+app_file: app.py
 pinned: true
 license: MIT
 tags:
