@@ -5,7 +5,14 @@ colorFrom: blue
 colorTo: indigo
 sdk: docker
 pinned: true
-license: mit
+license: MIT
+tags:
+  - econometrics
+  - panel-data
+  - did
+  - causal-inference
+  - streamlit
+  - python
 ---
 
 <div align="center">
