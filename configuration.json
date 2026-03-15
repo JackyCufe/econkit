@@ -1,0 +1,5 @@
+{
+  "framework": "general",
+  "license": "MIT",
+  "tags": ["econometrics", "panel-data", "did", "streamlit", "causal-inference", "python"]
+}
