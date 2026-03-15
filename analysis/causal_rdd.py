@@ -251,8 +251,10 @@ def plot_rdd(
     )
     bin_mean = bin_mean.dropna(subset=["bin_mid"])
 
-    left_bins  = bin_mean[bin_mean["bin_mid"] < cutoff]
-    right_bins = bin_mean[bin_mean["bin_mid"] >= cutoff]
+    # 确保 bin_mid 是 float，避免 Categorical dtype 比较报错
+    bin_mean["bin_mid"] = bin_mean["bin_mid"].astype(float)
+    left_bins  = bin_mean[bin_mean["bin_mid"] < float(cutoff)]
+    right_bins = bin_mean[bin_mean["bin_mid"] >= float(cutoff)]
 
     ax2.scatter(left_bins["bin_mid"],  left_bins[dep_var],
                 color="#2C3E50", s=50, zorder=5)

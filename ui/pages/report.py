@@ -204,10 +204,12 @@ def _build_sections(
             section: dict = {"title": name, "content": content}
             key = key_map.get(name)
 
-            # 提取表格
+            # 提取表格（不能用 or，DataFrame 的布尔值会抛 ValueError）
             if key and key in analysis_results:
                 res = analysis_results[key]
-                df_r = res.get("summary_df") or res.get("stats_df")
+                df_r = res.get("summary_df")
+                if df_r is None:
+                    df_r = res.get("stats_df")
                 if df_r is not None and not df_r.empty:
                     section["table_headers"] = list(df_r.columns)
                     section["table_rows"] = [
