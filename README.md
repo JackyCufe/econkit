@@ -29,8 +29,9 @@ tags:
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Built%20with-Streamlit-red.svg)](https://streamlit.io/)
 [![HuggingFace](https://img.shields.io/badge/🤗-HuggingFace%20Space-yellow)](https://huggingface.co/spaces/JackyCufe/econkit)
+[![ModelScope](https://img.shields.io/badge/🤖-魔搭社区-blueviolet)](https://modelscope.cn/studios/JackyCufe/EconKit/summary)
 
-**[🚀 在线体验](https://huggingface.co/spaces/JackyCufe/econkit)** · **[📖 使用文档](#-分析流程建议)** · **[☕ 支持作者](https://ifdian.net/a/jackycufe)**
+**[🚀 在线体验（魔搭）](https://modelscope.cn/studios/JackyCufe/EconKit/summary)** · **[🚀 在线体验（HuggingFace）](https://huggingface.co/spaces/JackyCufe/econkit)** · **[📖 使用文档](#-分析流程建议)** · **[☕ 支持作者](https://ifdian.net/a/jackycufe)**
 
 </div>
 
@@ -54,7 +55,8 @@ tags:
 
 ### 在线使用（推荐）
 
-直接访问：**https://huggingface.co/spaces/JackyCufe/econkit**
+- 🤖 **魔搭社区（国内访问首选）**：https://modelscope.cn/studios/JackyCufe/EconKit/summary
+- 🤗 **HuggingFace Space（国际版）**：https://huggingface.co/spaces/JackyCufe/econkit
 
 ### 本地运行
 
