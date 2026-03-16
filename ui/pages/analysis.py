@@ -657,13 +657,9 @@ def _run_gmm(df: pd.DataFrame) -> None:
         ["difference（差分GMM / Arellano-Bond）", "system（系统GMM / Blundell-Bond）"],
         horizontal=True, key="gmm_type",
     )
-    st.info("💡 GMM 自动在模型中加入被解释变量一期滞后项（动态面板标准做法）")
-    st.warning(
-        "⚠️ **注意**：当前实现为 PanelOLS 近似估计，**并非**完整的 Arellano-Bond / Blundell-Bond GMM。\n\n"
-        "- 差分GMM 使用双向固定效应（EntityFE + TimeEffects）近似\n"
-        "- 系统GMM 使用个体固定效应（EntityFE）近似\n"
-        "- **不含** AR(1)/AR(2) 序列相关检验和 Sargan/Hansen 过度识别检验\n\n"
-        "如需严格检验，建议使用 **Stata xtabond2** 或 R 的 **plm/panelvar** 包。"
+    st.info(
+        "✅ 使用 **pydynpd** 实现真正的 Arellano-Bond（差分GMM）/ Blundell-Bond（系统GMM）估计，"
+        "包含 Windmeijer(2005) 有限样本校正标准误 + AR(1)/AR(2) 检验 + Hansen 过度识别检验。"
     )
 
     if not indep_vars:
@@ -671,7 +667,7 @@ def _run_gmm(df: pd.DataFrame) -> None:
         return
 
     if st.button("▶ 运行 GMM 估计", type="primary"):
-        with st.spinner("估计中..."):
+        with st.spinner("估计中（真正的 Arellano-Bond / Blundell-Bond GMM）..."):
             result = run_dynamic_panel_gmm(
                 df, dep_var, indep_vars, id_col, time_col,
                 gmm_type=gmm_type.split("（")[0],
@@ -680,8 +676,26 @@ def _run_gmm(df: pd.DataFrame) -> None:
                 st.error(f"❌ {result['error']}")
             else:
                 display_regression_summary(result)
-                if "ar_note" in result:
-                    st.warning(result["ar_note"])
+
+                # AR 序列相关检验
+                if result.get("ar_tests"):
+                    st.markdown("#### Arellano-Bond 序列相关检验")
+                    ar_df = pd.DataFrame(result["ar_tests"])
+                    st.dataframe(ar_df, use_container_width=True)
+                    st.caption("判断标准：AR(1) 应显著（p<0.05），AR(2) 应不显著（p>0.1）")
+
+                # Hansen 过度识别检验
+                if result.get("hansen"):
+                    st.markdown("#### Hansen 过度识别检验")
+                    h = result["hansen"]
+                    col_a, col_b, col_c = st.columns(3)
+                    col_a.metric("chi² 统计量", str(h["chi2统计量"]))
+                    col_b.metric("自由度", str(h["自由度"]))
+                    col_c.metric("p 值", str(h["p值"]))
+                    st.info(h["结论"])
+
+                if result.get("ar_note"):
+                    st.success(result["ar_note"])
                 _save_result("gmm", result)
 
 
