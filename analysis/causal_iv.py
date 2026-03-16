@@ -166,53 +166,10 @@ def _sargan_test(result) -> dict:
         return {"note": "无法计算 Sargan 检验"}
 
 
-# ── 动态面板 GMM ─────────────────────────────────────────────────────────────
-def run_gmm_panel(
-    df: pd.DataFrame,
-    dep_var: str,
-    indep_vars: list[str],
-    id_col: str,
-    time_col: str,
-    lag_dep: int = 1,
-) -> dict:
-    """
-    简化版动态面板 GMM（差分GMM，使用 linearmodels）
-    注：完整 Arellano-Bond 需要 rpy2/Stata，这里用差分 IV 近似
-
-    Returns: 结果字典
-    """
-    from linearmodels import IVGMM
-
-    df = df.copy().sort_values([id_col, time_col])
-
-    # 创建滞后被解释变量
-    df["lag_dep"] = df.groupby(id_col)[dep_var].shift(lag_dep)
-    df["diff_dep"] = df.groupby(id_col)[dep_var].diff()
-
-    # 差分控制变量
-    for var in indep_vars:
-        df[f"diff_{var}"] = df.groupby(id_col)[var].diff()
-
-    df = df.dropna().set_index([id_col, time_col])
-
-    diff_controls = [f"diff_{v}" for v in indep_vars]
-    instrument_df = df[[dep_var, "lag_dep"] + diff_controls]
-
-    try:
-        model = IVGMM(
-            dependent=df["diff_dep"],
-            exog=None,
-            endog=df[["diff_dep"]],
-            instruments=instrument_df,
-        )
-        result = model.fit(cov_type="robust")
-        return {
-            "model":  result,
-            "n_obs":  int(result.nobs),
-            "note":   "差分 GMM 近似（仅供参考，建议使用 Stata xtabond2）",
-        }
-    except Exception as e:
-        return {"error": f"GMM 估计失败：{str(e)}"}
+# ── 动态面板 GMM（已移除，请使用 panel_regression.run_dynamic_panel_gmm）──────
+# run_gmm_panel 原实现存在逻辑错误（将 diff_dep 同时作为 dependent 和 endog 传入），
+# 且功能与 panel_regression.run_dynamic_panel_gmm 重复，故删除。
+# UI 层统一调用 panel_regression.run_dynamic_panel_gmm。
 
 
 # ── IV 结果可视化 ─────────────────────────────────────────────────────────────

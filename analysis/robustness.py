@@ -44,7 +44,6 @@ def winsorize_variables(
 # ── 替换核心变量稳健性 ────────────────────────────────────────────────────────
 def replace_key_variable(
     df: pd.DataFrame,
-    dep_var: str,
     alt_dep_var: str,
     indep_vars: list[str],
     base_coef_col: str,
@@ -52,6 +51,12 @@ def replace_key_variable(
 ) -> dict:
     """
     用替换的被解释变量重新回归，检验稳健性
+
+    Args:
+        alt_dep_var:   替换后的被解释变量列名
+        indep_vars:    解释变量列表
+        base_coef_col: 关注的核心解释变量名（从结果中提取其系数）
+        cov_type:      标准误类型
 
     Returns: 包含替换回归结果的字典
     """

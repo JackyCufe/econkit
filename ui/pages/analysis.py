@@ -658,6 +658,13 @@ def _run_gmm(df: pd.DataFrame) -> None:
         horizontal=True, key="gmm_type",
     )
     st.info("💡 GMM 自动在模型中加入被解释变量一期滞后项（动态面板标准做法）")
+    st.warning(
+        "⚠️ **注意**：当前实现为 PanelOLS 近似估计，**并非**完整的 Arellano-Bond / Blundell-Bond GMM。\n\n"
+        "- 差分GMM 使用双向固定效应（EntityFE + TimeEffects）近似\n"
+        "- 系统GMM 使用个体固定效应（EntityFE）近似\n"
+        "- **不含** AR(1)/AR(2) 序列相关检验和 Sargan/Hansen 过度识别检验\n\n"
+        "如需严格检验，建议使用 **Stata xtabond2** 或 R 的 **plm/panelvar** 包。"
+    )
 
     if not indep_vars:
         st.info("请选择至少一个解释变量")
