@@ -188,6 +188,25 @@ def _header_footer(canvas, doc) -> None:
 
 
 # ── 主生成函数 ─────────────────────────────────────────────────────────────────
+def _clean_text(text: str) -> str:
+    """将 emoji / 特殊 Unicode 符号替换为 PDF 安全的纯文本"""
+    replacements = {
+        "✅": "[PASS]", "❌": "[FAIL]", "⚠️": "[WARN]", "⚠": "[WARN]",
+        "🔧": "[FIX]", "💡": "[TIP]", "📊": "[STAT]", "🎯": "[TARGET]",
+        "🔴": "[!]", "🟡": "[~]", "🟢": "[OK]", "🟣": "[*]",
+        "📄": "[DOC]", "🚧": "[WIP]", "🎉": "[OK]", "🔍": "[SEARCH]",
+        "→": "->", "←": "<-", "×": "x", "≥": ">=", "≤": "<=",
+        "α": "alpha", "β": "beta", "γ": "gamma", "δ": "delta",
+        "\u2019": "'", "\u2018": "'", "\u201c": '"', "\u201d": '"',
+    }
+    for emoji, text_alt in replacements.items():
+        text = text.replace(emoji, text_alt)
+    # 移除其余无法渲染的 Unicode（代理区、私用区、emoji 块）
+    import re
+    text = re.sub(r'[\U00010000-\U0010ffff]', '', text)  # emoji 全块
+    return text
+
+
 def _fig_to_image(fig, max_width: float = 15.0) -> Optional[RLImage]:
     """将 matplotlib Figure 转为 ReportLab Image 对象"""
     try:
@@ -270,7 +289,7 @@ def generate_pdf_report(
     story.append(Paragraph("目  录", styles["h1"]))
     for i, section in enumerate(sections, 1):
         story.append(Paragraph(
-            f"{i}. {section.get('title', '分析结果')}",
+            _clean_text(f"{i}. {section.get('title', '分析结果')}"),
             styles["body"]
         ))
     story.append(PageBreak())
@@ -284,16 +303,18 @@ def generate_pdf_report(
         note = section.get("note", "")
 
         block: list = []
-        block.append(Paragraph(f"{i}. {section_title}", styles["h1"]))
+        block.append(Paragraph(_clean_text(f"{i}. {section_title}"), styles["h1"]))
 
         if content:
-            for line in content.strip().split("\n"):
+            for line in _clean_text(content).strip().split("\n"):
                 if line.strip():
                     block.append(Paragraph(line.strip(), styles["body"]))
 
         if table_headers and table_rows:
             block.append(Spacer(1, 0.3*cm))
-            tbl = _build_three_line_table(table_headers, table_rows)
+            clean_headers = [_clean_text(str(h)) for h in table_headers]
+            clean_rows = [[_clean_text(str(c)) for c in row] for row in table_rows]
+            tbl = _build_three_line_table(clean_headers, clean_rows)
             block.append(tbl)
             block.append(Spacer(1, 0.2*cm))
 
@@ -307,7 +328,7 @@ def generate_pdf_report(
                 block.append(Spacer(1, 0.2*cm))
 
         if note:
-            block.append(Paragraph(f"注：{note}", styles["note"]))
+            block.append(Paragraph(_clean_text(f"注：{note}"), styles["note"]))
 
         block.append(Spacer(1, 0.5*cm))
         story.append(KeepTogether(block))
