@@ -4,6 +4,7 @@ EconKit 全模块自动化测试
 """
 from __future__ import annotations
 
+import os
 import sys
 import warnings
 import traceback
@@ -16,7 +17,9 @@ import numpy as np
 import pandas as pd
 
 warnings.filterwarnings('ignore')
-sys.path.insert(0, '/Users/jacky/.openclaw/workspace/econkit')
+TESTS_DIR = os.path.dirname(os.path.abspath(__file__))
+ECONKIT_DIR = os.path.dirname(TESTS_DIR)
+sys.path.insert(0, ECONKIT_DIR)
 
 # ── 测试结果收集器 ────────────────────────────────────────────────────────────
 results: list[dict] = []
@@ -43,11 +46,11 @@ def run_with_catch(fn, *args, **kwargs):
 
 # ── 加载数据集 ────────────────────────────────────────────────────────────────
 print("\n=== 加载数据集 ===")
-base = '/Users/jacky/.openclaw/workspace/econkit'
-df1 = pd.read_csv(f'{base}/test_data.csv')
-df2 = pd.read_csv(f'{base}/tests/data_health.csv')
-df3 = pd.read_csv(f'{base}/tests/data_digital.csv')
-df4 = pd.read_csv(f'{base}/tests/data_rdd.csv')
+examples = os.path.join(ECONKIT_DIR, 'examples')
+df1 = pd.read_csv(os.path.join(examples, 'test_data.csv'))
+df2 = pd.read_csv(os.path.join(examples, 'data_health.csv'))
+df3 = pd.read_csv(os.path.join(examples, 'data_digital.csv'))
+df4 = pd.read_csv(os.path.join(examples, 'data_rdd.csv'))
 print(f"  df1 (企业教育): {df1.shape}, df2 (医疗补贴): {df2.shape}")
 print(f"  df3 (数字化): {df3.shape}, df4 (RDD): {df4.shape}")
 
@@ -413,7 +416,7 @@ Python版本：3.12
 - PSM ATT估计依赖倾向得分的overlap质量
 """
 
-report_path = '/Users/jacky/.openclaw/workspace/econkit/tests/test_report.md'
+report_path = os.path.join(TESTS_DIR, 'test_report.md')
 with open(report_path, 'w', encoding='utf-8') as f:
     f.write(report)
 
