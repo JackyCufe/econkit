@@ -512,8 +512,12 @@ def _run_did(df: pd.DataFrame) -> None:
                 st.markdown(t("did_placebo_title"))
                 real_coef = basic_result["did_coef"] if basic_result else None
                 _pbar = st.progress(0, text=f"安慰剂检验进行中（0/{n_sim}）...")
+                _placebo_last_pct = [0.0]
                 def _placebo_cb(pct: float) -> None:
-                    _pbar.progress(pct, text=f"安慰剂检验进行中（{int(pct*n_sim)}/{n_sim}）...")
+                    # 节流：每 5% 更新一次，避免高频重渲染导致页面抖动
+                    if pct - _placebo_last_pct[0] >= 0.05 or pct >= 1.0:
+                        _placebo_last_pct[0] = pct
+                        _pbar.progress(min(pct, 1.0), text=f"安慰剂检验进行中（{int(pct*n_sim)}/{n_sim}）...")
                 pl_result, pl_fig = run_placebo_test(
                     df,
                     dep_var    = vars_config["dep_var"],
@@ -765,8 +769,12 @@ def _run_bootstrap(df: pd.DataFrame) -> None:
 
     if st.button(t("bootstrap_run_btn"), type="primary"):
         _pbar = st.progress(0, text=f"Bootstrap 进行中（0/{n_boot}）...")
+        _boot_last_pct = [0.0]
         def _boot_cb(pct: float) -> None:
-            _pbar.progress(pct, text=f"Bootstrap 进行中（{int(pct*n_boot)}/{n_boot}）...")
+            # 节流：每 5% 更新一次，避免高频重渲染导致页面抖动
+            if pct - _boot_last_pct[0] >= 0.05 or pct >= 1.0:
+                _boot_last_pct[0] = pct
+                _pbar.progress(min(pct, 1.0), text=f"Bootstrap 进行中（{int(pct*n_boot)}/{n_boot}）...")
         result, fig = bootstrap_confidence_interval(
             df, dep_var, indep_vars, key_var, n_boot,
             progress_callback=_boot_cb,
@@ -897,8 +905,12 @@ def _run_mediation(df: pd.DataFrame) -> None:
 
     if st.button(t("mediation_run_btn"), type="primary"):
         _pbar = st.progress(0, text=f"Bootstrap 中介检验中（0/{n_boot}）...")
+        _med_last_pct = [0.0]
         def _med_cb(pct: float) -> None:
-            _pbar.progress(pct, text=f"Bootstrap 中介检验中（{int(pct*n_boot)}/{n_boot}）...")
+            # 节流：每 5% 更新一次，避免高频重渲染导致页面抖动
+            if pct - _med_last_pct[0] >= 0.05 or pct >= 1.0:
+                _med_last_pct[0] = pct
+                _pbar.progress(min(pct, 1.0), text=f"Bootstrap 中介检验中（{int(pct*n_boot)}/{n_boot}）...")
         result, fig = run_mediation_analysis(
             df, dep_var, mediator, treatment, controls or None, n_boot,
             progress_callback=_med_cb,
