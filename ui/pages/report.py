@@ -14,8 +14,8 @@ from i18n import t
 
 def render_report() -> None:
     """渲染报告下载页面"""
-    st.markdown(t("report.title"))
-    st.markdown(t("report.subtitle"))
+    st.markdown(t("report_title"))
+    st.markdown(t("report_subtitle"))
 
     st.divider()
 
@@ -23,15 +23,15 @@ def render_report() -> None:
     col1, col2 = st.columns(2)
     with col1:
         report_title = st.text_input(
-            t("report.input.title"),
-            value=t("report.input.title.default"),
-            key="report_title",
+            t("report_title_input"),
+            value=t("report_title_default"),
+            key="report_title_input",
         )
-        author = st.text_input(t("report.input.author"), value="", key="report_author")
+        author = st.text_input(t("report_author_input"), value="", key="report_author")
 
     with col2:
         data_desc = st.text_area(
-            t("report.input.data_desc"),
+            t("report_data_desc_input"),
             value=_get_default_data_desc(),
             height=100,
             key="report_data_desc",
@@ -40,16 +40,16 @@ def render_report() -> None:
     st.divider()
 
     # ── 选择包含的内容 ────────────────────────────────────────────────────────
-    st.markdown(t("report.section.title"))
+    st.markdown(t("report_section_title"))
     available_results = _get_available_results()
 
     if not available_results:
-        st.info(t("report.no_results"))
+        st.info(t("report_no_results"))
         _render_empty_report_option(report_title, author, data_desc)
         return
 
     include_sections = st.multiselect(
-        t("report.section.select"),
+        t("report_section_select"),
         options=[name for name, _ in available_results],
         default=[name for name, _ in available_results],
         key="report_sections",
@@ -60,8 +60,8 @@ def render_report() -> None:
     col_a, col_b = st.columns([1, 3])
 
     with col_a:
-        if st.button(t("report.btn.generate"), type="primary"):
-            with st.spinner(t("report.generating")):
+        if st.button(t("report_gen_btn"), type="primary"):
+            with st.spinner(t("report_generating")):
                 sections = _build_sections(available_results, include_sections)
                 metadata = {
                     "author":    author,
@@ -75,14 +75,14 @@ def render_report() -> None:
                         metadata = metadata,
                     )
                     st.session_state["pdf_bytes"] = pdf_bytes
-                    st.success(t("report.success"))
+                    st.success(t("report_success"))
                 except Exception as e:
-                    st.error(t("report.error", error=str(e)))
+                    st.error(t("report_error", error=str(e)))
 
     with col_b:
         if "pdf_bytes" in st.session_state and st.session_state["pdf_bytes"]:
             st.download_button(
-                label=t("report.btn.download"),
+                label=t("report_download_btn"),
                 data=st.session_state["pdf_bytes"],
                 file_name=f"{report_title}_{datetime.datetime.now().strftime('%Y%m%d')}.pdf",
                 mime="application/pdf",
@@ -92,7 +92,7 @@ def render_report() -> None:
     # ── 预览 ──────────────────────────────────────────────────────────────────
     if available_results:
         st.divider()
-        st.markdown(t("report.preview.title"))
+        st.markdown(t("report_preview_title"))
         for name, content in available_results:
             if name in (include_sections if include_sections else [n for n, _ in available_results]):
                 with st.expander(f"📌 {name}"):
@@ -108,17 +108,18 @@ def _get_available_results() -> list[tuple[str, str]]:
     results = []
     analysis_results = st.session_state.get("analysis_results", {})
 
+    # 使用 t() 动态获取名称
     name_map = {
-        "descriptive": t("report.result.descriptive"),
-        "ols":         t("report.result.ols"),
-        "panel_fe":    t("report.result.panel_fe"),
-        "did":         t("report.result.did"),
-        "psm":         t("report.result.psm"),
-        "rdd":         t("report.result.rdd"),
-        "iv":          t("report.result.iv"),
-        "bootstrap":   t("report.result.bootstrap"),
-        "mediation":   t("report.result.mediation"),
-        "moderation":  t("report.result.moderation"),
+        "descriptive": t("report_result_descriptive"),
+        "ols":         t("report_result_ols"),
+        "panel_fe":    t("report_result_panel_fe"),
+        "did":         t("report_result_did"),
+        "psm":         t("report_result_psm"),
+        "rdd":         t("report_result_rdd"),
+        "iv":          t("report_result_iv"),
+        "bootstrap":   t("report_result_bootstrap"),
+        "mediation":   t("report_result_mediation"),
+        "moderation":  t("report_result_moderation"),
     }
 
     for key, result in analysis_results.items():
@@ -135,12 +136,11 @@ def _build_result_summary(key: str, result: dict) -> str:
         stats = result.get("stats", {})
         df_r  = result.get("summary_df")
         lines = [
-            t("report.summary.model", name=result.get("name", "回归")),
-            t("report.summary.n_obs", n=stats.get("n_obs", "N/A")),
-            t("report.summary.r2", r2=stats.get("r2") or stats.get("r2_within", "N/A")),
+            f"{t('label_n_obs')}：{stats.get('n_obs', 'N/A')}",
+            f"{t('label_r2')}：{stats.get('r2') or stats.get('r2_within', 'N/A')}",
         ]
         if df_r is not None and not df_r.empty:
-            lines.append(t("report.summary.coefs"))
+            lines.append(f"{t('label_coef')}：")
             for _, row in df_r.head(5).iterrows():
                 lines.append(f"  {row['变量']}: {row['系数']}{row['显著性']}"
                              f" (SE={row['标准误']}, p={row['p值']})")
@@ -151,17 +151,17 @@ def _build_result_summary(key: str, result: dict) -> str:
         stars = result.get("did_stars", "")
         pval  = result.get("did_pval", "N/A")
         n     = result.get("n_obs", "N/A")
-        return t("report.summary.did", coef=coef, stars=stars, pval=pval, n=n)
+        return f"DID {t('label_coef')} = {coef}{stars}，p = {pval}，N = {n}"
 
     elif key == "descriptive":
         stats_df = result.get("stats_df")
         if stats_df is not None:
-            return t("report.summary.vars", n=len(stats_df))
-        return t("report.result.descriptive") + " 已完成"
+            return f"{t('label_n_obs')}：{len(stats_df)}"
+        return t("report_result_descriptive")
 
     else:
-        coef = result.get("coef", result.get("att", "N/A"))
-        return t("report.summary.done", key=key, coef=coef)
+        coef_val = result.get("coef", result.get("att", "N/A"))
+        return f"{key}：{t('label_coef')} = {coef_val}"
 
 
 def _build_sections(
@@ -171,45 +171,44 @@ def _build_sections(
     """构建 PDF 报告章节"""
     sections = []
     analysis_results = st.session_state.get("analysis_results", {})
-    unknown = t("pdf.data.unknown")
-    na = t("pdf.data.na")
 
     # 数据概况
     if "df" in st.session_state and st.session_state["df"] is not None:
         df = st.session_state["df"]
         panel_info = st.session_state.get("panel_info", {})
-        numeric_cols = ", ".join(df.select_dtypes(include="number").columns.tolist())
         sections.append({
-            "title": t("report.section.data"),
-            "content": "\n".join([
-                t("pdf.data.rows_cols", rows=len(df), cols=len(df.columns)),
-                t("pdf.data.id", col=panel_info.get("id_col", unknown)),
-                t("pdf.data.time", col=panel_info.get("time_col", unknown)),
-                t("pdf.data.entities", n=panel_info.get("n_entities", na)),
-                t("pdf.data.periods", n=panel_info.get("n_periods", na)),
-                t("pdf.data.numeric", cols=numeric_cols),
-            ]),
+            "title": t("report_section_data"),
+            "content": (
+                f"{t('pdf_data_rows_cols', rows=len(df), cols=len(df.columns))}\n"
+                f"{t('pdf_data_id', col=panel_info.get('id_col', 'N/A'))}\n"
+                f"{t('pdf_data_time', col=panel_info.get('time_col', 'N/A'))}\n"
+                f"{t('pdf_data_entities', n=panel_info.get('n_entities', 'N/A'))}\n"
+                f"{t('pdf_data_periods', n=panel_info.get('n_periods', 'N/A'))}\n"
+                f"{t('pdf_data_numeric', cols=', '.join(df.select_dtypes(include='number').columns.tolist()))}"
+            ),
         })
 
     # 各分析结果
     analysis_figures = st.session_state.get("analysis_figures", {})
-    result_name_to_key = {
-        t("report.result.ols"):       "ols",
-        t("report.result.panel_fe"):  "panel_fe",
-        t("report.result.descriptive"): "descriptive",
-        t("report.result.did"):       "did",
-        t("report.result.bootstrap"): "bootstrap",
-        t("report.result.mediation"): "mediation",
-        t("report.result.moderation"): "moderation",
-        "GMM":                        "gmm",
+
+    # 显示名称 → 内部 key 映射（按当前语言）
+    key_map = {
+        t("report_result_ols"):         "ols",
+        t("report_result_panel_fe"):    "panel_fe",
+        t("report_result_descriptive"): "descriptive",
+        t("report_result_did"):         "did",
+        t("report_result_bootstrap"):   "bootstrap",
+        t("report_result_mediation"):   "mediation",
+        t("report_result_moderation"):  "moderation",
+        "GMM":                          "gmm",
     }
 
     for name, content in available_results:
         if name in include_sections:
             section: dict = {"title": name, "content": content}
-            key = result_name_to_key.get(name)
+            key = key_map.get(name)
 
-            # 提取表格（不能用 or，DataFrame 的布尔值会抛 ValueError）
+            # 提取表格
             if key and key in analysis_results:
                 res = analysis_results[key]
                 df_r = res.get("summary_df")
@@ -237,13 +236,12 @@ def _get_default_data_desc() -> str:
         return ""
     df = st.session_state["df"]
     panel_info = st.session_state.get("panel_info", {})
-    unknown = t("pdf.data.unknown")
     return t(
-        "pdf.default_data_desc",
+        "pdf_default_data_desc",
         rows=len(df),
         cols=len(df.columns),
-        id=panel_info.get("id_col", unknown),
-        time=panel_info.get("time_col", unknown),
+        id=panel_info.get("id_col", "N/A"),
+        time=panel_info.get("time_col", "N/A"),
     )
 
 
@@ -252,18 +250,18 @@ def _render_empty_report_option(
 ) -> None:
     """无分析结果时，提供生成空报告的选项"""
     st.divider()
-    st.markdown(t("report.empty.title"))
-    if st.button(t("report.empty.btn")):
+    st.markdown(t("report_empty_title"))
+    if st.button(t("report_empty_btn")):
         sections = [
             {
-                "title": "Analysis Notes",
-                "content": t("report.empty.content"),
+                "title": "说明" if st.session_state.get("lang", "zh") == "zh" else "Note",
+                "content": t("report_empty_content"),
             }
         ]
         pdf_bytes = generate_pdf_report(title, sections,
                                          {"author": author, "data_desc": data_desc})
         st.download_button(
-            t("report.empty.download"),
+            t("report_empty_download"),
             data=pdf_bytes,
             file_name=f"{title}_template.pdf",
             mime="application/pdf",

@@ -19,25 +19,27 @@ CATEGORY_COLORS: dict[str, tuple[str, str]] = {
     "hetero":   ("#E8DAEF", "#6C3483"),
 }
 
-CATEGORY_LABEL_KEYS: dict[str, str] = {
-    "describe": "guide.category.describe",
-    "panel":    "guide.category.panel",
-    "causal":   "guide.category.causal",
-    "robust":   "guide.category.robust",
-    "hetero":   "guide.category.hetero",
+# 分类标签 key 映射（动态获取）
+CATEGORY_KEY_MAP: dict[str, str] = {
+    "describe": "guide_category_describe",
+    "panel":    "guide_category_panel",
+    "causal":   "guide_category_causal",
+    "robust":   "guide_category_robust",
+    "hetero":   "guide_category_hetero",
 }
 
-PRIORITY_LABEL_KEYS: dict[int, str] = {
-    1: "guide.priority.1",
-    2: "guide.priority.2",
-    3: "guide.priority.3",
+# 优先级 key 映射（动态获取）
+PRIORITY_KEY_MAP: dict[int, str] = {
+    1: "guide_priority_must",
+    2: "guide_priority_suggest",
+    3: "guide_priority_optional",
 }
 
 
 def render_smart_guide() -> None:
     """渲染智能引导页（步骤2）"""
-    st.markdown(t("guide.title"))
-    st.markdown(t("guide.subtitle"))
+    st.markdown(t("guide_title"))
+    st.markdown(t("guide_subtitle"))
 
     st.divider()
 
@@ -46,21 +48,21 @@ def render_smart_guide() -> None:
 
     with col1:
         description = st.text_area(
-            t("guide.input.label"),
-            placeholder=t("guide.input.placeholder"),
+            t("guide_input_label"),
+            placeholder=t("guide_input_placeholder"),
             height=150,
             key="smart_description",
         )
 
     with col2:
-        st.markdown(t("guide.keywords.title"))
-        st.markdown(t("guide.keywords.content"))
+        st.markdown(t("guide_keywords_title"))
+        st.markdown(t("guide_keywords_content"))
 
-    if st.button(t("guide.btn.recommend"), type="primary", disabled=not description.strip()):
-        with st.spinner(t("guide.recommending")):
+    if st.button(t("guide_btn_recommend"), type="primary", disabled=not description.strip()):
+        with st.spinner(t("guide_recommending")):
             recommendations = recommend_methods(description)
             st.session_state["recommendations"] = recommendations
-            st.success(t("guide.recommend.success", n=len(recommendations)))
+            st.success(t("guide_recommend_success", n=len(recommendations)))
 
     st.divider()
 
@@ -73,7 +75,7 @@ def render_smart_guide() -> None:
         # 主行动按钮：开始实证分析 →
         col_btn, col_tip = st.columns([1, 3])
         with col_btn:
-            if st.button(t("guide.btn.start_analysis"), type="primary", key="goto_analysis"):
+            if st.button(t("guide_goto_analysis"), type="primary", key="goto_analysis"):
                 st.session_state["recommended_methods"] = [
                     rec.method_name for rec in recommendations
                 ]
@@ -82,18 +84,18 @@ def render_smart_guide() -> None:
                 st.session_state["page"] = "📈 实证分析"
                 st.rerun()
         with col_tip:
-            st.info(t("guide.tip.methods_saved"))
+            st.info(t("guide_tip_methods_saved"))
 
     # ── 全部方法目录 ─────────────────────────────────────────────────────────
     st.divider()
-    st.markdown(t("guide.catalog.title"))
+    st.markdown(t("guide_catalog_title"))
     _render_method_catalog()
 
 
 def _render_recommendations(recommendations: list[MethodRecommendation]) -> None:
     """渲染推荐结果卡片（每个方法一张卡，含优先级标签）"""
-    st.markdown(t("guide.results.title"))
-    st.markdown(t("guide.results.subtitle"))
+    st.markdown(t("guide_result_title"))
+    st.markdown(t("guide_result_subtitle"))
 
     # 按优先级分组
     priority_groups: dict[int, list[MethodRecommendation]] = {1: [], 2: [], 3: []}
@@ -105,7 +107,7 @@ def _render_recommendations(recommendations: list[MethodRecommendation]) -> None
         if not group:
             continue
 
-        label = t(PRIORITY_LABEL_KEYS.get(priority, f"guide.priority.{priority}"))
+        label = t(PRIORITY_KEY_MAP.get(priority, f"guide_priority_{priority}"))
         st.markdown(f"#### {label}")
 
         for rec in group:
@@ -115,8 +117,10 @@ def _render_recommendations(recommendations: list[MethodRecommendation]) -> None
 def _render_method_card(rec: MethodRecommendation) -> None:
     """渲染单个方法推荐卡片"""
     bg, text = CATEGORY_COLORS.get(rec.category, ("#F8F9FA", "#2C3E50"))
-    cat_label = t(CATEGORY_LABEL_KEYS.get(rec.category, "guide.category.describe"))
-    priority_badge = t(PRIORITY_LABEL_KEYS.get(rec.priority, "guide.priority.3"))
+    cat_key = CATEGORY_KEY_MAP.get(rec.category)
+    cat_label = t(cat_key) if cat_key else rec.category
+    priority_key = PRIORITY_KEY_MAP.get(rec.priority)
+    priority_badge = t(priority_key) if priority_key else ""
 
     with st.container():
         st.markdown(
@@ -153,7 +157,7 @@ def _render_method_card(rec: MethodRecommendation) -> None:
         )
 
         if rec.sub_steps:
-            with st.expander(t("guide.sub_steps.expander")):
+            with st.expander(t("guide_sub_steps_expander")):
                 for i, step in enumerate(rec.sub_steps, 1):
                     st.markdown(f"{i}. {step}")
 
