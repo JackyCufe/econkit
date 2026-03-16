@@ -7,11 +7,12 @@ from __future__ import annotations
 import streamlit as st
 from i18n import t
 
-STEPS: list[tuple[int, str, str]] = [
-    (1, "📁", "step.1.label"),
-    (2, "🤖", "step.2.label"),
-    (3, "📈", "step.3.label"),
-    (4, "📄", "step.4.label"),
+# 步骤定义（icon 固定，label 通过 t() 动态获取）
+STEP_ICONS: list[tuple[int, str]] = [
+    (1, "📁"),
+    (2, "🤖"),
+    (3, "📈"),
+    (4, "📄"),
 ]
 
 STEP_TO_PAGE: dict[int, str] = {
@@ -97,13 +98,25 @@ def render_stepper(current_step: int) -> None:
     Args:
         current_step: 当前步骤编号 (1-4)
     """
+    # 动态获取步骤标签（支持 i18n）
+    step_labels = [
+        t("step1_label"),
+        t("step2_label"),
+        t("step3_label"),
+        t("step4_label"),
+    ]
+
+    STEPS = [
+        (step_num, icon, step_labels[i])
+        for i, (step_num, icon) in enumerate(STEP_ICONS)
+    ]
+
     # 注入 CSS
     st.markdown(_STEPPER_CSS, unsafe_allow_html=True)
 
     # 构建步骤条 HTML（只用 class，无 inline style）
     items = ""
-    for i, (step_num, icon, label_key) in enumerate(STEPS):
-        name = t(label_key)
+    for i, (step_num, icon, name) in enumerate(STEPS):
         if step_num < current_step:
             state = "done"
             display = "✓"

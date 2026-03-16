@@ -16,13 +16,14 @@ from ui.components.chart_display import (
     display_regression_summary, display_did_summary,
     display_test_result,
 )
+from i18n import t
 
 
 def render_analysis() -> None:
     """渲染实证分析页面（步骤3）"""
     if "df" not in st.session_state or st.session_state["df"] is None:
-        st.warning("⚠️ 请先在首页上传数据")
-        if st.button("← 返回上传数据", key="analysis_back_home"):
+        st.warning(t("analysis.no_data.warning"))
+        if st.button(t("analysis.no_data.back"), key="analysis_back_home"):
             st.session_state["step"] = 1
             st.session_state["page"] = "🏠 首页"
             st.rerun()
@@ -30,7 +31,7 @@ def render_analysis() -> None:
 
     df = st.session_state["df"]
 
-    st.markdown("## 📈 步骤3：实证分析")
+    st.markdown(t("analysis.title"))
 
     # ── 顶部快速操作栏（完成分析 → 生成报告）────────────────────────────────
     top_col1, top_col2 = st.columns([3, 1])
@@ -38,11 +39,11 @@ def render_analysis() -> None:
         analysis_results = st.session_state.get("analysis_results", {})
         if analysis_results:
             n_done = len(analysis_results)
-            st.success(f"✅ 已完成 {n_done} 项分析")
+            st.success(t("analysis.done_count", n=n_done))
         else:
-            st.info("💡 选择下方分析方法并运行，完成后点击右侧按钮生成报告")
+            st.info(t("analysis.tip"))
     with top_col2:
-        if st.button("📄 完成分析，生成报告 →", type="primary", key="goto_report"):
+        if st.button(t("analysis.btn.to_report"), type="primary", key="goto_report"):
             # 步骤跳转：步骤3 → 步骤4
             st.session_state["step"] = 4
             st.session_state["page"] = "📄 下载报告"
@@ -52,54 +53,55 @@ def render_analysis() -> None:
     recommended = st.session_state.get("recommended_methods", [])
     # 方法名 → 下拉选项 的映射
     _NAME_TO_OPTION: dict[str, str] = {
-        "描述统计分析": "描述统计",
-        "OLS 基准回归": "OLS 回归",
-        "固定效应模型 (FE)": "面板固定效应（FE/RE/TWFE）",
-        "双向固定效应 (TWFE)": "面板固定效应（FE/RE/TWFE）",
-        "DID 双重差分": "DID 双重差分",
-        "交错DID (Callaway-Sant'Anna)": "DID 双重差分",
-        "PSM 倾向得分匹配": "PSM 倾向得分匹配",
-        "RDD 断点回归": "RDD 断点回归",
-        "IV / 2SLS 工具变量": "IV / 2SLS",
-        "动态面板 GMM (Arellano-Bond)": "IV / 2SLS",
-        "中介效应分析": "中介效应",
-        "调节效应分析": "调节效应",
-        "分组回归": "分组回归",
-        "稳健性检验": "Bootstrap 置信区间",
+        "描述统计分析": t("method.descriptive"),
+        "OLS 基准回归": t("method.ols"),
+        "固定效应模型 (FE)": t("method.panel_fe"),
+        "双向固定效应 (TWFE)": t("method.panel_fe"),
+        "DID 双重差分": t("method.did"),
+        "交错DID (Callaway-Sant'Anna)": t("method.did"),
+        "PSM 倾向得分匹配": t("method.psm"),
+        "RDD 断点回归": t("method.rdd"),
+        "IV / 2SLS 工具变量": t("method.iv"),
+        "动态面板 GMM (Arellano-Bond)": t("method.iv"),
+        "中介效应分析": t("method.mediation"),
+        "调节效应分析": t("method.moderation"),
+        "分组回归": t("method.subgroup"),
+        "稳健性检验": t("method.bootstrap"),
     }
 
-    default_index = 0
     all_options = [
-        "── 🔵 描述与诊断 ──",
-        "描述统计",
-        "相关矩阵",
-        "正态性检验",
-        "VIF 多重共线性",
-        "异方差检验",
-        "自相关检验",
-        "── 🟡 基准回归 ──",
-        "OLS 回归",
-        "面板固定效应（FE/RE/TWFE）",
-        "Hausman 检验",
-        "面板单位根检验",
-        "── 🔴 因果推断 ──",
-        "DID 双重差分",
-        "PSM 倾向得分匹配",
-        "RDD 断点回归",
-        "IV / 2SLS",
-        "动态面板 GMM",
-        "── 🟢 稳健性检验 ──",
-        "Bootstrap 置信区间",
-        "剔除特殊样本",
-        "── 🟣 异质性与机制 ──",
-        "分组回归",
-        "分位数回归",
-        "中介效应",
-        "调节效应",
+        t("group.describe"),
+        t("method.descriptive"),
+        t("method.correlation"),
+        t("method.normality"),
+        t("method.vif"),
+        t("method.heterosked"),
+        t("method.autocorrelation"),
+        t("group.baseline"),
+        t("method.ols"),
+        t("method.panel_fe"),
+        t("method.hausman"),
+        t("method.unit_root"),
+        t("group.causal"),
+        t("method.did"),
+        t("method.psm"),
+        t("method.rdd"),
+        t("method.iv"),
+        t("method.gmm"),
+        t("group.robust"),
+        t("method.bootstrap"),
+        t("method.exclude_samples"),
+        t("group.hetero"),
+        t("method.subgroup"),
+        t("method.quantile"),
+        t("method.mediation"),
+        t("method.moderation"),
     ]
 
+    default_index = 0
+
     if recommended:
-        st.info(f"🎯 智能引导为你推荐了 **{len(recommended)}** 个分析方法，点击快速跳转：")
+        st.info(t("analysis.recommended.info", n=len(recommended)))
         cols = st.columns(min(len(recommended), 4))
         for i, name in enumerate(recommended[:8]):
             option = _NAME_TO_OPTION.get(name)
@@ -116,7 +118,7 @@ def render_analysis() -> None:
 
     # 分析方法选择
     analysis_type = st.selectbox(
-        "🔬 选择分析方法",
+        t("analysis.method.select"),
         all_options,
         index=default_index,
         key="analysis_type",
@@ -125,32 +127,39 @@ def render_analysis() -> None:
     st.divider()
 
     # 路由到各分析模块
-    if "──" in analysis_type:
-        st.info("👆 请从下拉菜单选择具体分析方法")
+    _group_labels = {
+        t("group.describe"),
+        t("group.baseline"),
+        t("group.causal"),
+        t("group.robust"),
+        t("group.hetero"),
+    }
+    if analysis_type in _group_labels:
+        st.info(t("analysis.method.placeholder"))
         return
 
     router = {
-        "描述统计":               _run_descriptive,
-        "相关矩阵":               _run_correlation,
-        "正态性检验":             _run_normality,
-        "VIF 多重共线性":         _run_vif,
-        "异方差检验":             _run_heterosked,
-        "自相关检验":             _run_autocorrelation,
-        "OLS 回归":               _run_ols,
-        "面板固定效应（FE/RE/TWFE）": _run_panel_fe,
-        "Hausman 检验":           _run_hausman,
-        "面板单位根检验":         _run_unit_root,
-        "DID 双重差分":           _run_did,
-        "PSM 倾向得分匹配":       _run_psm,
-        "RDD 断点回归":           _run_rdd,
-        "IV / 2SLS":              _run_iv,
-        "动态面板 GMM":           _run_gmm,
-        "Bootstrap 置信区间":     _run_bootstrap,
-        "剔除特殊样本":           _run_exclude_samples,
-        "分组回归":               _run_subgroup,
-        "分位数回归":             _run_quantile,
-        "中介效应":               _run_mediation,
-        "调节效应":               _run_moderation,
+        t("method.descriptive"):      _run_descriptive,
+        t("method.correlation"):      _run_correlation,
+        t("method.normality"):        _run_normality,
+        t("method.vif"):              _run_vif,
+        t("method.heterosked"):       _run_heterosked,
+        t("method.autocorrelation"):  _run_autocorrelation,
+        t("method.ols"):              _run_ols,
+        t("method.panel_fe"):         _run_panel_fe,
+        t("method.hausman"):          _run_hausman,
+        t("method.unit_root"):        _run_unit_root,
+        t("method.did"):              _run_did,
+        t("method.psm"):              _run_psm,
+        t("method.rdd"):              _run_rdd,
+        t("method.iv"):               _run_iv,
+        t("method.gmm"):              _run_gmm,
+        t("method.bootstrap"):        _run_bootstrap,
+        t("method.exclude_samples"):  _run_exclude_samples,
+        t("method.subgroup"):         _run_subgroup,
+        t("method.quantile"):         _run_quantile,
+        t("method.mediation"):        _run_mediation,
+        t("method.moderation"):       _run_moderation,
     }
 
     handler = router.get(analysis_type)
@@ -165,18 +174,18 @@ def _run_descriptive(df: pd.DataFrame) -> None:
     from analysis.descriptive import compute_descriptive_stats, plot_descriptive_stats
 
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
-    cols = st.multiselect("选择分析变量", numeric_cols, default=numeric_cols[:6],
+    cols = st.multiselect(t("desc.vars.label"), numeric_cols, default=numeric_cols[:6],
                           key="desc_cols")
     if not cols:
         return
 
-    if st.button("▶ 运行描述统计", type="primary"):
+    if st.button(t("desc.btn.run"), type="primary"):
         with st.spinner("计算中..."):
             stats_df = compute_descriptive_stats(df, cols)
-            display_result_table(stats_df, "描述统计结果",
-                                 "均值/标准差/分位数/偏度/峰度")
+            display_result_table(stats_df, t("desc.result.title"),
+                                 t("desc.result.note"))
             fig = plot_descriptive_stats(df, cols)
-            display_figure(fig, "变量分布图", "distribution.png")
+            display_figure(fig, t("desc.fig.title"), "distribution.png")
             _save_result("descriptive", {"stats_df": stats_df}, fig)
 
 
@@ -185,20 +194,20 @@ def _run_correlation(df: pd.DataFrame) -> None:
     from analysis.descriptive import compute_correlation_matrix, plot_correlation_matrix
 
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
-    cols   = st.multiselect("选择变量", numeric_cols, default=numeric_cols[:6],
+    cols   = st.multiselect(t("corr.vars.label"), numeric_cols, default=numeric_cols[:6],
                             key="corr_cols")
-    method = st.radio("相关系数方法", ["pearson", "spearman"], horizontal=True,
+    method = st.radio(t("corr.method.label"), ["pearson", "spearman"], horizontal=True,
                       key="corr_method")
     if not cols:
         return
 
-    if st.button("▶ 运行相关矩阵", type="primary"):
+    if st.button(t("corr.btn.run"), type="primary"):
         with st.spinner("计算中..."):
             corr, pvals = compute_correlation_matrix(df, cols, method)
-            display_result_table(corr, f"{method.capitalize()} 相关矩阵",
-                                 "下三角为相关系数，***p<0.01，**p<0.05，*p<0.1")
+            display_result_table(corr, t("corr.result.title", method=method.capitalize()),
+                                 t("corr.result.note"))
             fig = plot_correlation_matrix(corr, pvals)
-            display_figure(fig, "相关矩阵热力图", "correlation.png")
+            display_figure(fig, t("corr.fig.title"), "correlation.png")
 
 
 # ── 正态性检验 ────────────────────────────────────────────────────────────────
@@ -206,15 +215,15 @@ def _run_normality(df: pd.DataFrame) -> None:
     from analysis.descriptive import test_normality
 
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
-    cols = st.multiselect("选择检验变量", numeric_cols, default=numeric_cols[:4],
+    cols = st.multiselect(t("norm.vars.label"), numeric_cols, default=numeric_cols[:4],
                           key="norm_cols")
     if not cols:
         return
 
-    if st.button("▶ 运行正态性检验", type="primary"):
+    if st.button(t("norm.btn.run"), type="primary"):
         with st.spinner("检验中..."):
             result_df = test_normality(df, cols)
-            display_result_table(result_df, "正态性检验结果（Shapiro-Wilk / Jarque-Bera）")
+            display_result_table(result_df, t("norm.result.title"))
 
 
 # ── VIF ───────────────────────────────────────────────────────────────────────
@@ -222,41 +231,42 @@ def _run_vif(df: pd.DataFrame) -> None:
     from analysis.descriptive import compute_vif
 
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
-    cols = st.multiselect("选择变量（将计算两两VIF）", numeric_cols,
+    cols = st.multiselect(t("vif.vars.label"), numeric_cols,
                           default=numeric_cols[:4], key="vif_cols")
     if len(cols) < 2:
-        st.info("请至少选择 2 个变量")
+        st.info(t("vif.vars.min"))
         return
 
-    if st.button("▶ 计算 VIF", type="primary"):
+    if st.button(t("vif.btn.run"), type="primary"):
         with st.spinner("计算中..."):
             vif_df = compute_vif(df, cols)
-            display_result_table(vif_df, "VIF 多重共线性检验",
-                                 "VIF>10 严重共线性，VIF>5 中度共线性")
+            display_result_table(vif_df, t("vif.result.title"),
+                                 t("vif.result.note"))
 
 
 # ── 自相关检验 ────────────────────────────────────────────────────────────────
 def _run_autocorrelation(df: pd.DataFrame) -> None:
     from analysis.descriptive import test_autocorrelation
 
-    st.markdown("### 自相关检验（Durbin-Watson）")
+    st.markdown(t("autocorr.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
     col1, col2 = st.columns(2)
     with col1:
-        dep_var    = st.selectbox("被解释变量", numeric_cols, key="ac_dep")
+        dep_var    = st.selectbox(t("autocorr.dep.label"), numeric_cols, key="ac_dep")
     with col2:
-        indep_vars = st.multiselect("解释变量", [c for c in numeric_cols if c != dep_var],
+        indep_vars = st.multiselect(t("autocorr.indep.label"),
+                                    [c for c in numeric_cols if c != dep_var],
                                     key="ac_indep")
     if not indep_vars:
-        st.info("请选择至少一个解释变量")
+        st.info(t("autocorr.indep.min"))
         return
 
-    if st.button("▶ 运行自相关检验", type="primary"):
+    if st.button(t("autocorr.btn.run"), type="primary"):
         with st.spinner("检验中..."):
             result = test_autocorrelation(df, dep_var, indep_vars)
-            display_test_result(result["durbin_watson"], "Durbin-Watson 检验", "结论")
-            st.info(f"💡 建议：{result['recommendation']}")
+            display_test_result(result["durbin_watson"], t("autocorr.test.name"), "结论")
+            st.info(f"{t('autocorr.recommend.prefix')}{result['recommendation']}")
 
 
 # ── 异方差检验 ────────────────────────────────────────────────────────────────
@@ -264,44 +274,45 @@ def _run_heterosked(df: pd.DataFrame) -> None:
     from analysis.descriptive import test_heteroskedasticity
 
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
-    dep_var   = st.selectbox("被解释变量", numeric_cols, key="het_dep")
-    indep_vars = st.multiselect("解释变量", [c for c in numeric_cols if c != dep_var],
+    dep_var   = st.selectbox(t("het.dep.label"), numeric_cols, key="het_dep")
+    indep_vars = st.multiselect(t("het.indep.label"),
+                                [c for c in numeric_cols if c != dep_var],
                                 key="het_indep")
     if not indep_vars:
         return
 
-    if st.button("▶ 运行异方差检验", type="primary"):
+    if st.button(t("het.btn.run"), type="primary"):
         with st.spinner("检验中..."):
             result = test_heteroskedasticity(df, dep_var, indep_vars)
-            st.markdown("**Breusch-Pagan 检验**")
-            display_test_result(result["breusch_pagan"], "BP 检验")
-            st.markdown("**White 检验**")
-            display_test_result(result["white"], "White 检验")
-            st.info(f"💡 建议：{result['recommendation']}")
+            st.markdown(t("het.bp.title"))
+            display_test_result(result["breusch_pagan"], t("het.bp.name"))
+            st.markdown(t("het.white.title"))
+            display_test_result(result["white"], t("het.white.name"))
+            st.info(f"{t('het.recommend.prefix')}{result['recommendation']}")
 
 
 # ── 面板单位根检验 ─────────────────────────────────────────────────────────────
 def _run_unit_root(df: pd.DataFrame) -> None:
     from analysis.panel_regression import test_panel_unit_root
 
-    st.markdown("### 面板单位根检验（ADF 汇总）")
+    st.markdown(t("unit_root.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
     all_cols     = list(df.columns)
 
     col1, col2 = st.columns(2)
     with col1:
-        test_col = st.selectbox("检验变量", numeric_cols, key="ur_col")
+        test_col = st.selectbox(t("unit_root.col.label"), numeric_cols, key="ur_col")
     with col2:
-        id_col   = st.selectbox("个体变量", all_cols, key="ur_id")
-        time_col = st.selectbox("时间变量", all_cols, key="ur_time")
+        id_col   = st.selectbox(t("unit_root.id.label"), all_cols, key="ur_id")
+        time_col = st.selectbox(t("unit_root.time.label"), all_cols, key="ur_time")
 
-    if st.button("▶ 运行单位根检验", type="primary"):
+    if st.button(t("unit_root.btn.run"), type="primary"):
         with st.spinner("检验中..."):
             result = test_panel_unit_root(df, test_col, id_col, time_col)
             if "error" in result:
                 st.error(result["error"])
             else:
-                display_test_result(result, "面板单位根检验（ADF 汇总）", "结论")
+                display_test_result(result, t("unit_root.result.name"), "结论")
                 st.info(f"💡 建议：{result.get('建议', '')}")
 
 
@@ -309,26 +320,27 @@ def _run_unit_root(df: pd.DataFrame) -> None:
 def _run_ols(df: pd.DataFrame) -> None:
     from analysis.panel_regression import run_ols
 
-    st.markdown("### OLS 普通最小二乘回归")
+    st.markdown(t("ols.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
     col1, col2 = st.columns(2)
     with col1:
-        dep_var = st.selectbox("被解释变量（Y）", numeric_cols, key="ols_dep")
+        dep_var = st.selectbox(t("ols.dep.label"), numeric_cols, key="ols_dep")
     with col2:
-        cov_type = st.selectbox("标准误类型", ["HC3（稳健）", "nonrobust（普通）"],
-                                key="ols_cov")
-    indep_vars = st.multiselect("解释变量（X）",
+        cov_options = [t("ols.cov.robust"), t("ols.cov.plain")]
+        cov_type = st.selectbox(t("ols.cov.label"), cov_options, key="ols_cov")
+    indep_vars = st.multiselect(t("ols.indep.label"),
                                 [c for c in numeric_cols if c != dep_var],
                                 key="ols_indep")
     if not indep_vars:
-        st.info("请选择至少一个解释变量")
+        st.info(t("ols.indep.min"))
         return
 
-    if st.button("▶ 运行 OLS 回归", type="primary"):
+    if st.button(t("ols.btn.run"), type="primary"):
         with st.spinner("回归中..."):
-            result = run_ols(df, dep_var, indep_vars,
-                             cov_type.split("（")[0])
+            # Extract code prefix before （
+            cov_code = "HC3" if "HC3" in cov_type else "nonrobust"
+            result = run_ols(df, dep_var, indep_vars, cov_code)
             display_regression_summary(result)
             _save_result("ols", result, None)
 
@@ -337,14 +349,14 @@ def _run_ols(df: pd.DataFrame) -> None:
 def _run_panel_fe(df: pd.DataFrame) -> None:
     from analysis.panel_regression import run_panel_model
 
-    st.markdown("### 面板固定/随机效应回归")
+    st.markdown(t("panel.title"))
     vars_config = select_panel_variables(df, "panel")
 
     if not vars_config["indep_vars"]:
-        st.info("请选择至少一个解释变量")
+        st.info(t("panel.indep.min"))
         return
 
-    if st.button("▶ 运行面板模型", type="primary"):
+    if st.button(t("panel.btn.run"), type="primary"):
         with st.spinner("回归中..."):
             result = run_panel_model(
                 df,
@@ -362,29 +374,30 @@ def _run_panel_fe(df: pd.DataFrame) -> None:
 def _run_hausman(df: pd.DataFrame) -> None:
     from analysis.panel_regression import run_hausman_test
 
-    st.markdown("### Hausman 检验（FE vs RE）")
+    st.markdown(t("hausman.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
     all_cols     = list(df.columns)
 
     col1, col2 = st.columns(2)
     with col1:
-        id_col   = st.selectbox("个体变量", all_cols, key="hm_id")
-        dep_var  = st.selectbox("被解释变量", numeric_cols, key="hm_dep")
+        id_col   = st.selectbox(t("hausman.id.label"), all_cols, key="hm_id")
+        dep_var  = st.selectbox(t("hausman.dep.label"), numeric_cols, key="hm_dep")
     with col2:
-        time_col = st.selectbox("时间变量", all_cols, key="hm_time")
-        indep_vars = st.multiselect("解释变量", [c for c in numeric_cols if c != dep_var],
+        time_col = st.selectbox(t("hausman.time.label"), all_cols, key="hm_time")
+        indep_vars = st.multiselect(t("hausman.indep.label"),
+                                    [c for c in numeric_cols if c != dep_var],
                                     key="hm_indep")
 
     if not indep_vars:
         return
 
-    if st.button("▶ 运行 Hausman 检验", type="primary"):
+    if st.button(t("hausman.btn.run"), type="primary"):
         with st.spinner("检验中..."):
             result = run_hausman_test(df, dep_var, indep_vars, id_col, time_col)
             if "error" in result:
                 st.error(result["error"])
             else:
-                display_test_result(result, "Hausman 检验（FE vs RE）", "结论")
+                display_test_result(result, t("hausman.result.name"), "结论")
 
 
 # ── DID ───────────────────────────────────────────────────────────────────────
@@ -394,24 +407,24 @@ def _run_did(df: pd.DataFrame) -> None:
         run_parallel_trend_test, run_placebo_test,
     )
 
-    st.markdown("### DID 双重差分分析")
+    st.markdown(t("did.title"))
     vars_config = select_did_variables(df, "did")
 
     sub_analyses = st.multiselect(
-        "选择分析步骤",
-        ["基准 DID（OLS）", "双向固定效应 DID", "平行趋势检验", "安慰剂检验"],
-        default=["基准 DID（OLS）", "平行趋势检验", "安慰剂检验"],
+        t("did.steps.label"),
+        [t("did.step.basic"), t("did.step.twfe"), t("did.step.parallel"), t("did.step.placebo")],
+        default=[t("did.step.basic"), t("did.step.parallel"), t("did.step.placebo")],
         key="did_steps",
     )
 
-    n_sim = st.slider("安慰剂检验模拟次数", 100, 2000, 1000, 100,
-                      key="did_nsim") if "安慰剂检验" in sub_analyses else 1000
+    n_sim = st.slider(t("did.nsim.label"), 100, 2000, 1000, 100,
+                      key="did_nsim") if t("did.step.placebo") in sub_analyses else 1000
 
-    if st.button("▶ 运行 DID 分析", type="primary"):
-        with st.spinner("分析中（可能需要 1-3 分钟）..."):
+    if st.button(t("did.btn.run"), type="primary"):
+        with st.spinner(t("did.running")):
             basic_result = None
-            if "基准 DID（OLS）" in sub_analyses:
-                st.markdown("#### 基准 DID")
+            if t("did.step.basic") in sub_analyses:
+                st.markdown(t("did.basic.title"))
                 basic_result = run_basic_did(
                     df,
                     dep_var   = vars_config["dep_var"],
@@ -420,10 +433,10 @@ def _run_did(df: pd.DataFrame) -> None:
                     did_col   = vars_config["did_col"],
                     controls  = vars_config["controls"] or None,
                 )
-                display_did_summary(basic_result, "基准 DID（OLS + 稳健SE）")
+                display_did_summary(basic_result, t("did.display.basic"))
 
-            if "双向固定效应 DID" in sub_analyses:
-                st.markdown("#### 双向固定效应 DID")
+            if t("did.step.twfe") in sub_analyses:
+                st.markdown(t("did.twfe.title"))
                 twfe_result = run_twfe_did(
                     df,
                     dep_var   = vars_config["dep_var"],
@@ -432,10 +445,10 @@ def _run_did(df: pd.DataFrame) -> None:
                     time_col  = vars_config["time_col"],
                     controls  = vars_config["controls"] or None,
                 )
-                display_did_summary(twfe_result, "TWFE DID（个体+时间双向FE）")
+                display_did_summary(twfe_result, t("did.display.twfe"))
 
-            if "平行趋势检验" in sub_analyses:
-                st.markdown("#### 平行趋势检验（事件研究法）")
+            if t("did.step.parallel") in sub_analyses:
+                st.markdown(t("did.parallel.title"))
                 pt_result, pt_fig = run_parallel_trend_test(
                     df,
                     dep_var    = vars_config["dep_var"],
@@ -446,17 +459,17 @@ def _run_did(df: pd.DataFrame) -> None:
                     controls   = vars_config["controls"] or None,
                 )
                 if "error" not in pt_result:
-                    display_figure(pt_fig, "平行趋势检验图", "parallel_trend.png")
+                    display_figure(pt_fig, t("did.parallel.fig.title"), "parallel_trend.png")
                     st.info(pt_result.get("conclusion", ""))
                 else:
-                    st.error(f"平行趋势检验失败：{pt_result['error']}")
+                    st.error(t("did.parallel.error", error=pt_result["error"]))
 
-            if "安慰剂检验" in sub_analyses:
-                st.markdown("#### 安慰剂检验（随机置换处理组）")
+            if t("did.step.placebo") in sub_analyses:
+                st.markdown(t("did.placebo.title"))
                 real_coef = basic_result["did_coef"] if basic_result else None
-                _pbar = st.progress(0, text=f"安慰剂检验进行中（0/{n_sim}）...")
+                _pbar = st.progress(0, text=t("did.placebo.progress", done=0, n=n_sim))
                 def _placebo_cb(pct: float) -> None:
-                    _pbar.progress(pct, text=f"安慰剂检验进行中（{int(pct*n_sim)}/{n_sim}）...")
+                    _pbar.progress(pct, text=t("did.placebo.progress", done=int(pct*n_sim), n=n_sim))
                 pl_result, pl_fig = run_placebo_test(
                     df,
                     dep_var    = vars_config["dep_var"],
@@ -468,7 +481,7 @@ def _run_did(df: pd.DataFrame) -> None:
                     progress_callback = _placebo_cb,
                 )
                 _pbar.empty()
-                display_figure(pl_fig, f"安慰剂检验（{n_sim}次置换）", "placebo_test.png")
+                display_figure(pl_fig, t("did.placebo.fig.title", n=n_sim), "placebo_test.png")
                 st.info(pl_result.get("conclusion", ""))
 
 
@@ -479,48 +492,49 @@ def _run_psm(df: pd.DataFrame) -> None:
         kernel_matching, check_covariate_balance, plot_psm_distributions,
     )
 
-    st.markdown("### PSM 倾向得分匹配")
+    st.markdown(t("psm.title"))
     all_cols     = list(df.columns)
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
     col1, col2 = st.columns(2)
     with col1:
-        treat_col = st.selectbox("处理组变量（0/1）", all_cols,
+        treat_col = st.selectbox(t("psm.treat.label"), all_cols,
                                  index=next((i for i, c in enumerate(all_cols)
                                              if "treat" in c.lower()), 0),
                                  key="psm_treat")
-        dep_var = st.selectbox("结果变量（Y）", numeric_cols, key="psm_dep")
+        dep_var = st.selectbox(t("psm.dep.label"), numeric_cols, key="psm_dep")
     with col2:
-        covariates = st.multiselect("匹配协变量",
+        covariates = st.multiselect(t("psm.covs.label"),
                                     [c for c in numeric_cols if c != dep_var],
                                     key="psm_covs")
-        method = st.radio("匹配方法", ["KNN（最近邻）", "核匹配"],
+        method = st.radio(t("psm.method.label"),
+                          [t("psm.method.knn"), t("psm.method.kernel")],
                           horizontal=True, key="psm_method")
 
-    k = st.slider("KNN 近邻数", 1, 5, 1, key="psm_k") if "KNN" in method else 1
+    k = st.slider(t("psm.k.label"), 1, 5, 1, key="psm_k") if "KNN" in method or "Nearest" in method else 1
 
     if not covariates:
-        st.info("请选择匹配协变量")
+        st.info(t("psm.covs.min"))
         return
 
-    if st.button("▶ 运行 PSM 匹配", type="primary"):
-        with st.spinner("匹配中..."):
+    if st.button(t("psm.btn.run"), type="primary"):
+        with st.spinner(t("psm.matching")):
             ps_df = estimate_propensity_score(df, treat_col, covariates)
             fig_dist = plot_psm_distributions(ps_df, treat_col)
-            display_figure(fig_dist, "倾向得分分布图", "psm_distribution.png")
+            display_figure(fig_dist, t("psm.dist.fig.title"), "psm_distribution.png")
 
-            if "KNN" in method:
+            if "KNN" in method or "Nearest" in method:
                 result = knn_matching(ps_df, df[dep_var].reset_index(drop=True),
                                       treat_col, k=k)
             else:
                 result = kernel_matching(ps_df, df[dep_var].reset_index(drop=True),
                                          treat_col)
 
-            st.markdown(f"#### ATT 估计（{result['method']}）")
+            st.markdown(t("psm.att.title", method=result["method"]))
             col_a, col_b, col_c = st.columns(3)
-            col_a.metric("ATT（平均处理效应）", f"{result['att']}{result['stars']}")
-            col_b.metric("标准误", str(result["att_se"]))
-            col_c.metric("p 值", str(result["p_value"]))
+            col_a.metric(t("psm.att.label"), f"{result['att']}{result['stars']}")
+            col_b.metric(t("psm.se.label"), str(result["att_se"]))
+            col_c.metric(t("psm.pval.label"), str(result["p_value"]))
 
 
 # ── RDD ───────────────────────────────────────────────────────────────────────
@@ -530,36 +544,34 @@ def _run_rdd(df: pd.DataFrame) -> None:
         mccrary_density_test, plot_rdd,
     )
 
-    st.markdown("### RDD 断点回归")
+    st.markdown(t("rdd.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
     col1, col2 = st.columns(2)
     with col1:
-        dep_var     = st.selectbox("被解释变量（Y）", numeric_cols, key="rdd_dep")
-        running_var = st.selectbox("运行变量（评分/指标）", numeric_cols,
-                                   key="rdd_run")
+        dep_var     = st.selectbox(t("rdd.dep.label"), numeric_cols, key="rdd_dep")
+        running_var = st.selectbox(t("rdd.run.label"), numeric_cols, key="rdd_run")
     with col2:
-        cutoff    = st.number_input("断点值", value=60.0, key="rdd_cutoff")
-        bw        = st.number_input("带宽（0=自动选择）", value=0.0, step=0.1,
-                                    key="rdd_bw")
-        poly      = st.radio("多项式阶数", [1, 2], horizontal=True, key="rdd_poly")
+        cutoff    = st.number_input(t("rdd.cutoff.label"), value=60.0, key="rdd_cutoff")
+        bw        = st.number_input(t("rdd.bw.label"), value=0.0, step=0.1, key="rdd_bw")
+        poly      = st.radio(t("rdd.poly.label"), [1, 2], horizontal=True, key="rdd_poly")
 
     bandwidth = bw if bw > 0 else None
 
-    if st.button("▶ 运行 RDD 分析", type="primary"):
-        with st.spinner("分析中..."):
+    if st.button(t("rdd.btn.run"), type="primary"):
+        with st.spinner(t("rdd.analyzing")):
             # RDD 可视化
             fig = plot_rdd(df, dep_var, running_var, cutoff, bandwidth)
-            display_figure(fig, "RDD 断点图", "rdd_plot.png")
+            display_figure(fig, t("rdd.fig.title"), "rdd_plot.png")
 
             # 最优带宽
             if bandwidth is None:
                 bw_result = select_optimal_bandwidth(df, dep_var, running_var, cutoff)
                 bandwidth = bw_result["optimal_bandwidth"]
-                st.info(f"📏 建议带宽：{bandwidth}（score 标准差 × 1.0）")
+                st.info(t("rdd.bw.info", bw=bandwidth))
                 if not bw_result["sensitivity_table"].empty:
                     display_result_table(bw_result["sensitivity_table"],
-                                         "带宽敏感性分析")
+                                         t("rdd.bw.sens.title"))
 
             # 局部线性回归
             result = run_rdd_local_linear(df, dep_var, running_var, cutoff,
@@ -568,53 +580,50 @@ def _run_rdd(df: pd.DataFrame) -> None:
                 st.error(result["error"])
             else:
                 col_a, col_b, col_c, col_d = st.columns(4)
-                col_a.metric("断点处跳跃（RDD系数）",
-                             f"{result['coef']}{result['stars']}")
-                col_b.metric("标准误", str(result["se"]))
-                col_c.metric("p 值", str(result["pval"]))
-                col_d.metric("带宽内 N", str(result["n_obs"]))
+                col_a.metric(t("rdd.coef.label"), f"{result['coef']}{result['stars']}")
+                col_b.metric(t("rdd.se.label"), str(result["se"]))
+                col_c.metric(t("rdd.pval.label"), str(result["pval"]))
+                col_d.metric(t("rdd.n.label"), str(result["n_obs"]))
 
             # McCrary 密度检验
-            st.markdown("#### McCrary 密度检验")
-            density_result, density_fig = mccrary_density_test(
-                df, running_var, cutoff
-            )
-            display_figure(density_fig, "密度连续性检验", "mccrary.png")
-            display_test_result(density_result, "密度检验结果")
+            st.markdown(t("rdd.density.title"))
+            density_result, density_fig = mccrary_density_test(df, running_var, cutoff)
+            display_figure(density_fig, t("rdd.density.fig.title"), "mccrary.png")
+            display_test_result(density_result, t("rdd.density.result.title"))
 
 
 # ── IV/2SLS ───────────────────────────────────────────────────────────────────
 def _run_iv(df: pd.DataFrame) -> None:
     from analysis.causal_iv import run_iv_2sls
 
-    st.markdown("### IV / 2SLS 工具变量回归")
+    st.markdown(t("iv.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
     col1, col2 = st.columns(2)
     with col1:
-        dep_var   = st.selectbox("被解释变量（Y）", numeric_cols, key="iv_dep")
-        endog_var = st.selectbox("内生变量（X）",
+        dep_var   = st.selectbox(t("iv.dep.label"), numeric_cols, key="iv_dep")
+        endog_var = st.selectbox(t("iv.endog.label"),
                                  [c for c in numeric_cols if c != dep_var],
                                  key="iv_endog")
     with col2:
         instruments = st.multiselect(
-            "工具变量（Z）",
+            t("iv.instruments.label"),
             [c for c in numeric_cols if c not in [dep_var, endog_var]],
             key="iv_instruments",
         )
 
     controls = st.multiselect(
-        "外生控制变量",
+        t("iv.controls.label"),
         [c for c in numeric_cols if c not in [dep_var, endog_var] + instruments],
         key="iv_controls",
     )
 
     if not instruments:
-        st.info("请选择工具变量")
+        st.info(t("iv.instruments.min"))
         return
 
-    if st.button("▶ 运行 IV/2SLS", type="primary"):
-        with st.spinner("估计中..."):
+    if st.button(t("iv.btn.run"), type="primary"):
+        with st.spinner(t("iv.estimating")):
             result = run_iv_2sls(df, dep_var, endog_var, instruments,
                                   controls or None)
             if "error" in result:
@@ -622,55 +631,54 @@ def _run_iv(df: pd.DataFrame) -> None:
                 return
 
             col_a, col_b, col_c = st.columns(3)
-            col_a.metric("IV 系数", f"{result['coef']}{result['stars']}")
-            col_b.metric("标准误", str(result["se"]))
-            col_c.metric("第一阶段 F", f"{result['first_stage_f']:.2f}"
-                         + (" ✅" if result["weak_iv_pass"] else " ⚠️弱工具"))
+            col_a.metric(t("iv.coef.label"), f"{result['coef']}{result['stars']}")
+            col_b.metric(t("iv.se.label"), str(result["se"]))
+            weak_note = " ✅" if result["weak_iv_pass"] else f" {t('iv.weak_iv')}"
+            col_c.metric(t("iv.f.label"), f"{result['first_stage_f']:.2f}{weak_note}")
 
-            display_test_result(result["wu_hausman"], "Wu-Hausman 内生性检验", "结论")
+            display_test_result(result["wu_hausman"], t("iv.wu_hausman.name"), "结论")
             if "p值" in result.get("sargan", {}):
-                display_test_result(result["sargan"], "Sargan 过度识别检验", "结论")
+                display_test_result(result["sargan"], t("iv.sargan.name"), "结论")
 
 
 # ── 动态面板 GMM ───────────────────────────────────────────────────────────────
 def _run_gmm(df: pd.DataFrame) -> None:
     from analysis.panel_regression import run_dynamic_panel_gmm
 
-    st.markdown("### 动态面板 GMM（Arellano-Bond）")
+    st.markdown(t("gmm.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
     all_cols     = list(df.columns)
 
     col1, col2 = st.columns(2)
     with col1:
-        dep_var  = st.selectbox("被解释变量（Y）", numeric_cols, key="gmm_dep")
-        id_col   = st.selectbox("个体变量", all_cols, key="gmm_id")
+        dep_var  = st.selectbox(t("gmm.dep.label"), numeric_cols, key="gmm_dep")
+        id_col   = st.selectbox(t("gmm.id.label"), all_cols, key="gmm_id")
     with col2:
         indep_vars = st.multiselect(
-            "解释变量（函数自动加入 Y 的一期滞后）",
+            t("gmm.indep.label"),
             [c for c in numeric_cols if c != dep_var],
             key="gmm_indep",
         )
-        time_col = st.selectbox("时间变量", all_cols, key="gmm_time")
+        time_col = st.selectbox(t("gmm.time.label"), all_cols, key="gmm_time")
 
     gmm_type = st.radio(
-        "GMM 类型",
-        ["difference（差分GMM / Arellano-Bond）", "system（系统GMM / Blundell-Bond）"],
+        t("gmm.type.label"),
+        [t("gmm.type.diff"), t("gmm.type.sys")],
         horizontal=True, key="gmm_type",
     )
-    st.info(
-        "✅ 使用 **pydynpd** 实现真正的 Arellano-Bond（差分GMM）/ Blundell-Bond（系统GMM）估计，"
-        "包含 Windmeijer(2005) 有限样本校正标准误 + AR(1)/AR(2) 检验 + Hansen 过度识别检验。"
-    )
+    st.info(t("gmm.info"))
 
     if not indep_vars:
-        st.info("请选择至少一个解释变量")
+        st.info(t("gmm.indep.min"))
         return
 
-    if st.button("▶ 运行 GMM 估计", type="primary"):
-        with st.spinner("估计中（真正的 Arellano-Bond / Blundell-Bond GMM）..."):
+    if st.button(t("gmm.btn.run"), type="primary"):
+        with st.spinner(t("gmm.running")):
+            # Extract type code: "difference" or "system"
+            gmm_code = "difference" if "difference" in gmm_type or "差分" in gmm_type else "system"
             result = run_dynamic_panel_gmm(
                 df, dep_var, indep_vars, id_col, time_col,
-                gmm_type=gmm_type.split("（")[0],
+                gmm_type=gmm_code,
             )
             if "error" in result:
                 st.error(f"❌ {result['error']}")
@@ -679,19 +687,19 @@ def _run_gmm(df: pd.DataFrame) -> None:
 
                 # AR 序列相关检验
                 if result.get("ar_tests"):
-                    st.markdown("#### Arellano-Bond 序列相关检验")
+                    st.markdown(t("gmm.ar.title"))
                     ar_df = pd.DataFrame(result["ar_tests"])
                     st.dataframe(ar_df, use_container_width=True)
-                    st.caption("判断标准：AR(1) 应显著（p<0.05），AR(2) 应不显著（p>0.1）")
+                    st.caption(t("gmm.ar.caption"))
 
                 # Hansen 过度识别检验
                 if result.get("hansen"):
-                    st.markdown("#### Hansen 过度识别检验")
+                    st.markdown(t("gmm.hansen.title"))
                     h = result["hansen"]
                     col_a, col_b, col_c = st.columns(3)
-                    col_a.metric("chi² 统计量", str(h["chi2统计量"]))
-                    col_b.metric("自由度", str(h["自由度"]))
-                    col_c.metric("p 值", str(h["p值"]))
+                    col_a.metric(t("gmm.hansen.chi2.label"), str(h["chi2统计量"]))
+                    col_b.metric(t("gmm.hansen.df.label"), str(h["自由度"]))
+                    col_c.metric(t("gmm.hansen.pval.label"), str(h["p值"]))
                     st.info(h["结论"])
 
                 if result.get("ar_note"):
@@ -703,34 +711,34 @@ def _run_gmm(df: pd.DataFrame) -> None:
 def _run_bootstrap(df: pd.DataFrame) -> None:
     from analysis.robustness import bootstrap_confidence_interval
 
-    st.markdown("### Bootstrap 置信区间")
+    st.markdown(t("boot.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
     col1, col2 = st.columns(2)
     with col1:
-        dep_var  = st.selectbox("被解释变量", numeric_cols, key="boot_dep")
-        key_var  = st.selectbox("关注变量（计算CI）",
+        dep_var  = st.selectbox(t("boot.dep.label"), numeric_cols, key="boot_dep")
+        key_var  = st.selectbox(t("boot.key.label"),
                                 [c for c in numeric_cols if c != dep_var],
                                 key="boot_key")
     with col2:
-        n_boot = st.slider("Bootstrap 次数", 200, 2000, 1000, 100, key="boot_n")
-        indep_vars = st.multiselect("所有解释变量",
+        n_boot = st.slider(t("boot.n.label"), 200, 2000, 1000, 100, key="boot_n")
+        indep_vars = st.multiselect(t("boot.indep.label"),
                                     [c for c in numeric_cols if c != dep_var],
                                     key="boot_indep")
 
     if not indep_vars:
         return
 
-    if st.button("▶ 运行 Bootstrap", type="primary"):
-        _pbar = st.progress(0, text=f"Bootstrap 进行中（0/{n_boot}）...")
+    if st.button(t("boot.btn.run"), type="primary"):
+        _pbar = st.progress(0, text=t("boot.progress", done=0, n=n_boot))
         def _boot_cb(pct: float) -> None:
-            _pbar.progress(pct, text=f"Bootstrap 进行中（{int(pct*n_boot)}/{n_boot}）...")
+            _pbar.progress(pct, text=t("boot.progress", done=int(pct*n_boot), n=n_boot))
         result, fig = bootstrap_confidence_interval(
             df, dep_var, indep_vars, key_var, n_boot,
             progress_callback=_boot_cb,
         )
         _pbar.empty()
-        display_figure(fig, "Bootstrap 分布", "bootstrap.png")
+        display_figure(fig, t("boot.fig.title"), "bootstrap.png")
         st.info(result.get("conclusion", ""))
         _save_result("bootstrap", result, fig)
 
@@ -739,139 +747,145 @@ def _run_bootstrap(df: pd.DataFrame) -> None:
 def _run_exclude_samples(df: pd.DataFrame) -> None:
     from analysis.robustness import exclude_special_samples
 
-    st.markdown("### 剔除特殊样本稳健性检验")
+    st.markdown(t("excl.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
-    dep_var    = st.selectbox("被解释变量", numeric_cols, key="excl_dep")
-    key_var    = st.selectbox("核心解释变量",
+    dep_var    = st.selectbox(t("excl.dep.label"), numeric_cols, key="excl_dep")
+    key_var    = st.selectbox(t("excl.key.label"),
                               [c for c in numeric_cols if c != dep_var],
                               key="excl_key")
-    indep_vars = st.multiselect("所有解释变量",
+    indep_vars = st.multiselect(t("excl.indep.label"),
                                 [c for c in numeric_cols if c != dep_var],
                                 key="excl_indep")
 
-    st.markdown("**排除条件（pandas query 语法）**")
-    n_conditions = st.number_input("条件数量", 1, 5, 2, key="excl_n")
+    st.markdown(t("excl.conditions.title"))
+    n_conditions = st.number_input(t("excl.n_conditions.label"), 1, 5, 2, key="excl_n")
     conditions = []
     for i in range(int(n_conditions)):
         col_a, col_b = st.columns([1, 2])
         with col_a:
-            label = st.text_input(f"条件{i+1}说明", f"排除条件{i+1}",
-                                  key=f"excl_label_{i}")
+            label = st.text_input(
+                t("excl.condition.label_prefix", i=i+1),
+                t("excl.condition.default_label", i=i+1),
+                key=f"excl_label_{i}",
+            )
         with col_b:
-            query = st.text_input(f"Query（如 industry=='科技'）", "",
-                                  key=f"excl_query_{i}")
+            query = st.text_input(
+                t("excl.condition.query_label"),
+                "",
+                key=f"excl_query_{i}",
+            )
         if query:
             conditions.append({"label": label, "query": query})
 
     if not indep_vars or not conditions:
         return
 
-    if st.button("▶ 运行稳健性检验", type="primary"):
-        with st.spinner("检验中..."):
+    if st.button(t("excl.btn.run"), type="primary"):
+        with st.spinner(t("excl.running")):
             result_df = exclude_special_samples(df, dep_var, indep_vars,
                                                 key_var, conditions)
-            display_result_table(result_df, "剔除特殊样本稳健性结果")
+            display_result_table(result_df, t("excl.result.title"))
 
 
 # ── 分组回归 ──────────────────────────────────────────────────────────────────
 def _run_subgroup(df: pd.DataFrame) -> None:
     from analysis.heterogeneity import run_subgroup_regression
 
-    st.markdown("### 分组回归（异质性分析）")
+    st.markdown(t("subgroup.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
     all_cols     = list(df.columns)
 
     col1, col2 = st.columns(2)
     with col1:
-        dep_var   = st.selectbox("被解释变量", numeric_cols, key="sub_dep")
-        key_var   = st.selectbox("核心解释变量",
+        dep_var   = st.selectbox(t("subgroup.dep.label"), numeric_cols, key="sub_dep")
+        key_var   = st.selectbox(t("subgroup.key.label"),
                                  [c for c in numeric_cols if c != dep_var],
                                  key="sub_key")
     with col2:
-        group_col  = st.selectbox("分组变量", all_cols, key="sub_group")
-        indep_vars = st.multiselect("解释变量（含核心变量）",
+        group_col  = st.selectbox(t("subgroup.group.label"), all_cols, key="sub_group")
+        indep_vars = st.multiselect(t("subgroup.indep.label"),
                                     [c for c in numeric_cols if c != dep_var],
                                     key="sub_indep")
 
     if not indep_vars:
         return
 
-    if st.button("▶ 运行分组回归", type="primary"):
-        with st.spinner("回归中..."):
+    if st.button(t("subgroup.btn.run"), type="primary"):
+        with st.spinner(t("subgroup.running")):
             result_df, fig = run_subgroup_regression(
                 df, dep_var, indep_vars, key_var, group_col
             )
-            display_figure(fig, "分组回归系数比较图", "subgroup.png")
-            display_result_table(result_df, "分组回归结果对比")
+            display_figure(fig, t("subgroup.fig.title"), "subgroup.png")
+            display_result_table(result_df, t("subgroup.result.title"))
 
 
 # ── 分位数回归 ────────────────────────────────────────────────────────────────
 def _run_quantile(df: pd.DataFrame) -> None:
     from analysis.heterogeneity import run_quantile_regression
 
-    st.markdown("### 分位数回归")
+    st.markdown(t("quantile.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
-    dep_var    = st.selectbox("被解释变量", numeric_cols, key="qr_dep")
-    key_var    = st.selectbox("核心解释变量",
+    dep_var    = st.selectbox(t("quantile.dep.label"), numeric_cols, key="qr_dep")
+    key_var    = st.selectbox(t("quantile.key.label"),
                               [c for c in numeric_cols if c != dep_var],
                               key="qr_key")
-    indep_vars = st.multiselect("所有解释变量（含核心）",
+    indep_vars = st.multiselect(t("quantile.indep.label"),
                                 [c for c in numeric_cols if c != dep_var],
                                 key="qr_indep")
 
     if not indep_vars or key_var not in indep_vars:
-        st.info("请将核心解释变量包含在解释变量中")
+        st.info(t("quantile.indep.min"))
         return
 
-    if st.button("▶ 运行分位数回归", type="primary"):
-        with st.spinner("回归中..."):
+    if st.button(t("quantile.btn.run"), type="primary"):
+        with st.spinner(t("quantile.running")):
             result_df, fig = run_quantile_regression(df, dep_var, indep_vars, key_var)
-            display_figure(fig, "分位数回归系数图", "quantile_reg.png")
-            display_result_table(result_df, "分位数回归结果")
+            display_figure(fig, t("quantile.fig.title"), "quantile_reg.png")
+            display_result_table(result_df, t("quantile.result.title"))
 
 
 # ── 中介效应 ──────────────────────────────────────────────────────────────────
 def _run_mediation(df: pd.DataFrame) -> None:
     from analysis.heterogeneity import run_mediation_analysis
 
-    st.markdown("### 中介效应分析（Bootstrap）")
+    st.markdown(t("mediation.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        treatment = st.selectbox("处理/原因变量（X）", numeric_cols, key="med_x")
+        treatment = st.selectbox(t("mediation.x.label"), numeric_cols, key="med_x")
     with col2:
-        mediator  = st.selectbox("中介变量（M）",
+        mediator  = st.selectbox(t("mediation.m.label"),
                                  [c for c in numeric_cols if c != treatment],
                                  key="med_m")
     with col3:
-        dep_var   = st.selectbox("结果变量（Y）",
+        dep_var   = st.selectbox(t("mediation.y.label"),
                                  [c for c in numeric_cols
                                   if c not in [treatment, mediator]],
                                  key="med_y")
 
-    controls = st.multiselect("控制变量",
+    controls = st.multiselect(t("mediation.controls.label"),
                               [c for c in numeric_cols
                                if c not in [treatment, mediator, dep_var]],
                               key="med_controls")
-    n_boot   = st.slider("Bootstrap 次数", 200, 2000, 1000, 100, key="med_boot")
+    n_boot   = st.slider(t("mediation.boot.label"), 200, 2000, 1000, 100, key="med_boot")
 
-    if st.button("▶ 运行中介效应分析", type="primary"):
-        _pbar = st.progress(0, text=f"Bootstrap 中介检验中（0/{n_boot}）...")
+    if st.button(t("mediation.btn.run"), type="primary"):
+        _pbar = st.progress(0, text=t("mediation.progress", done=0, n=n_boot))
         def _med_cb(pct: float) -> None:
-            _pbar.progress(pct, text=f"Bootstrap 中介检验中（{int(pct*n_boot)}/{n_boot}）...")
+            _pbar.progress(pct, text=t("mediation.progress", done=int(pct*n_boot), n=n_boot))
         result, fig = run_mediation_analysis(
             df, dep_var, mediator, treatment, controls or None, n_boot,
             progress_callback=_med_cb,
         )
         _pbar.empty()
-        display_figure(fig, "中介效应路径图与Bootstrap分布", "mediation.png")
+        display_figure(fig, t("mediation.fig.title"), "mediation.png")
         col_a, col_b, col_c = st.columns(3)
-        col_a.metric("间接效应（a×b）", str(result["indirect_effect"]))
-        col_b.metric("直接效应（c'）", str(result["direct_effect"]))
-        col_c.metric("中介比例", f"{result['pct_mediated']}%")
+        col_a.metric(t("mediation.indirect.label"), str(result["indirect_effect"]))
+        col_b.metric(t("mediation.direct.label"), str(result["direct_effect"]))
+        col_c.metric(t("mediation.pct.label"), f"{result['pct_mediated']}%")
         st.info(result.get("conclusion", ""))
         _save_result("mediation", result, fig)
 
@@ -880,37 +894,37 @@ def _run_mediation(df: pd.DataFrame) -> None:
 def _run_moderation(df: pd.DataFrame) -> None:
     from analysis.heterogeneity import run_moderation_analysis
 
-    st.markdown("### 调节效应分析")
+    st.markdown(t("moderation.title"))
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        treatment = st.selectbox("自变量（X）", numeric_cols, key="mod_x")
+        treatment = st.selectbox(t("moderation.x.label"), numeric_cols, key="mod_x")
     with col2:
-        moderator = st.selectbox("调节变量（M）",
+        moderator = st.selectbox(t("moderation.m.label"),
                                  [c for c in numeric_cols if c != treatment],
                                  key="mod_m")
     with col3:
-        dep_var   = st.selectbox("因变量（Y）",
+        dep_var   = st.selectbox(t("moderation.y.label"),
                                  [c for c in numeric_cols
                                   if c not in [treatment, moderator]],
                                  key="mod_y")
 
-    controls = st.multiselect("控制变量",
+    controls = st.multiselect(t("moderation.controls.label"),
                               [c for c in numeric_cols
                                if c not in [treatment, moderator, dep_var]],
                               key="mod_controls")
 
-    if st.button("▶ 运行调节效应分析", type="primary"):
-        with st.spinner("分析中..."):
+    if st.button(t("moderation.btn.run"), type="primary"):
+        with st.spinner(t("moderation.analyzing")):
             result, fig = run_moderation_analysis(
                 df, dep_var, treatment, moderator, controls or None
             )
-            display_figure(fig, "调节效应简单斜率图", "moderation.png")
+            display_figure(fig, t("moderation.fig.title"), "moderation.png")
             col_a, col_b, col_c = st.columns(3)
-            col_a.metric("交互项系数", f"{result['interaction_coef']}{result['stars']}")
-            col_b.metric("标准误", str(result["interaction_se"]))
-            col_c.metric("p 值", str(result["interaction_pval"]))
+            col_a.metric(t("moderation.coef.label"), f"{result['interaction_coef']}{result['stars']}")
+            col_b.metric(t("moderation.se.label"), str(result["interaction_se"]))
+            col_c.metric(t("moderation.pval.label"), str(result["interaction_pval"]))
             st.info(result.get("conclusion", ""))
             _save_result("moderation", result, fig)
 
