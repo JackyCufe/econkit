@@ -15,11 +15,13 @@ import os
 sys.path.insert(0, os.path.dirname(__file__))
 
 import streamlit as st
+from i18n import t
 
 # 初始化学术图表主题（必须在 streamlit 组件之前）
 from assets.academic_theme import apply_academic_theme
 apply_academic_theme()
 
+from i18n import t
 from ui.components.stepper import render_stepper, STEP_TO_PAGE, PAGE_TO_STEP
 from ui.pages.home import render_home
 from ui.pages.smart_guide import render_smart_guide
@@ -29,7 +31,7 @@ from ui.pages.report import render_report
 
 # ── 页面配置 ──────────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="EconKit - 计量经济学分析工具",
+    page_title="EconKit - Econometric Analysis Toolkit",
     page_icon="📊",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -51,6 +53,8 @@ _load_css()
 def _init_session() -> None:
     """初始化 session state 默认值，确保所有关键字段存在"""
     defaults: dict = {
+        # 语言设置
+        "lang":             "zh",
         # 步骤状态（驱动向导式导航）
         "step":             1,
         "page":             "🏠 首页",
@@ -65,6 +69,8 @@ def _init_session() -> None:
         "recommended_methods": [],
         # 报告状态
         "pdf_bytes":        None,
+        # 语言状态
+        "lang":             "zh",
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -77,6 +83,23 @@ _init_session()
 current_page = st.session_state["page"]
 current_step = st.session_state["step"]
 
+
+# ── 顶部语言切换（在 render_stepper 之前）────────────────────────────────────
+_lang_col1, _lang_col2 = st.columns([20, 1])
+with _lang_col2:
+    _btn_label = t("lang.toggle")
+    if st.button(_btn_label, key="lang_toggle"):
+        st.session_state["lang"] = "en" if st.session_state.get("lang", "zh") == "zh" else "zh"
+        st.rerun()
+
+
+# ── 顶部语言切换按钮 ──────────────────────────────────────────────────────────
+_lc1, _lc2 = st.columns([20, 1])
+with _lc2:
+    _btn_label = "🌐 EN" if st.session_state.get("lang", "zh") == "zh" else "🌐 中文"
+    if st.button(_btn_label, key="lang_toggle", help="Switch Language / 切换语言"):
+        st.session_state["lang"] = "en" if st.session_state.get("lang", "zh") == "zh" else "zh"
+        st.rerun()
 
 # ── 顶部步骤进度条（所有页面内容之上） ────────────────────────────────────────
 render_stepper(current_step)

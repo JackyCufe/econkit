@@ -8,6 +8,8 @@ from typing import Optional
 import pandas as pd
 import streamlit as st
 
+from i18n import t
+
 
 def select_variables(
     df: pd.DataFrame,
@@ -33,28 +35,28 @@ def select_variables(
         col1, col2 = st.columns(2)
         with col1:
             result["id_col"] = st.selectbox(
-                "🏢 个体变量（面板ID）",
+                t("var.id.label"),
                 options=all_cols,
                 index=_guess_index(all_cols, ["firm_id", "id", "entity", "code"]),
                 key=f"{key_prefix}_id",
             )
         with col2:
             result["time_col"] = st.selectbox(
-                "📅 时间变量",
+                t("var.time.label"),
                 options=all_cols,
                 index=_guess_index(all_cols, ["year", "time", "date", "period"]),
                 key=f"{key_prefix}_time",
             )
 
     result["dep_var"] = st.selectbox(
-        "📌 被解释变量（Y）",
+        t("var.dep.label"),
         options=numeric_cols,
         index=_guess_index(numeric_cols, ["tfp", "y", "outcome", "dep"]),
         key=f"{key_prefix}_dep",
     )
 
     result["indep_vars"] = st.multiselect(
-        "📋 解释变量（X）",
+        t("var.indep.label"),
         options=[c for c in numeric_cols if c != result.get("dep_var")],
         default=[],
         key=f"{key_prefix}_indep",
@@ -71,18 +73,18 @@ def select_did_variables(
     all_cols     = list(df.columns)
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
 
-    st.markdown("**📌 DID 变量配置**")
+    st.markdown(t("did.config.title"))
     col1, col2 = st.columns(2)
 
     with col1:
         dep_var = st.selectbox(
-            "被解释变量（Y）",
+            t("did.dep.label"),
             numeric_cols,
             index=_guess_index(numeric_cols, ["tfp", "y", "outcome"]),
             key=f"{key_prefix}_dep",
         )
         treat_col = st.selectbox(
-            "处理组虚拟变量（treat）",
+            t("did.treat.label"),
             all_cols,
             index=_guess_index(all_cols, ["treat", "treated", "group"]),
             key=f"{key_prefix}_treat",
@@ -90,40 +92,40 @@ def select_did_variables(
 
     with col2:
         post_col = st.selectbox(
-            "政策后虚拟变量（post）",
+            t("did.post.label"),
             all_cols,
             index=_guess_index(all_cols, ["post", "after", "policy"]),
             key=f"{key_prefix}_post",
         )
         did_col = st.selectbox(
-            "交乘项（did = treat×post）",
+            t("did.did.label"),
             all_cols,
             index=_guess_index(all_cols, ["did", "treat_post", "interaction"]),
             key=f"{key_prefix}_did",
         )
 
     id_col = st.selectbox(
-        "个体变量（面板ID）",
+        t("did.id.label"),
         all_cols,
         index=_guess_index(all_cols, ["firm_id", "id", "entity"]),
         key=f"{key_prefix}_id",
     )
     time_col = st.selectbox(
-        "时间变量",
+        t("did.time.label"),
         all_cols,
         index=_guess_index(all_cols, ["year", "time", "date"]),
         key=f"{key_prefix}_time",
     )
 
     treat_year = st.number_input(
-        "政策实施年份（用于事件研究）",
+        t("did.treat_year.label"),
         value=int(df[time_col].median()) if time_col in df.columns else 2015,
         step=1,
         key=f"{key_prefix}_treat_year",
     )
 
     controls = st.multiselect(
-        "控制变量",
+        t("did.controls.label"),
         [c for c in numeric_cols
          if c not in [dep_var, treat_col, post_col, did_col]],
         key=f"{key_prefix}_controls",
@@ -148,25 +150,25 @@ def select_panel_variables(df: pd.DataFrame, key_prefix: str = "panel") -> dict:
 
     col1, col2 = st.columns(2)
     with col1:
-        id_col = st.selectbox("个体变量", all_cols,
+        id_col = st.selectbox(t("panel_var.id.label"), all_cols,
                               index=_guess_index(all_cols, ["firm_id", "id"]),
                               key=f"{key_prefix}_id")
-        dep_var = st.selectbox("被解释变量（Y）", numeric_cols,
+        dep_var = st.selectbox(t("panel_var.dep.label"), numeric_cols,
                                index=_guess_index(numeric_cols, ["tfp", "y"]),
                                key=f"{key_prefix}_dep")
     with col2:
-        time_col = st.selectbox("时间变量", all_cols,
+        time_col = st.selectbox(t("panel_var.time.label"), all_cols,
                                 index=_guess_index(all_cols, ["year", "time"]),
                                 key=f"{key_prefix}_time")
         model_type = st.selectbox(
-            "模型类型",
+            t("panel_var.model.label"),
             ["fe（个体固定效应）", "te（时间固定效应）",
              "twfe（双向固定效应）", "re（随机效应）"],
             key=f"{key_prefix}_model",
         )
 
     indep_vars = st.multiselect(
-        "解释变量（X）",
+        t("panel_var.indep.label"),
         [c for c in numeric_cols if c != dep_var],
         key=f"{key_prefix}_indep",
     )

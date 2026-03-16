@@ -15,16 +15,17 @@ from core.data_loader import (
     validate_panel_data,
     generate_sample_data,
 )
+from i18n import t
 
 
 def render_home() -> None:
     """渲染首页（步骤1：上传数据）"""
     st.markdown(
-        """
+        f"""
         <div style="text-align:center; padding:2rem 0 1rem 0;">
-            <h1 style="color:#2C3E50; font-size:2.5rem; margin:0;">📊 EconKit</h1>
+            <h1 style="color:#2C3E50; font-size:2.5rem; margin:0;">{t("home.title")}</h1>
             <p style="color:#7F8C8D; font-size:1.1rem; margin:0.5rem 0 0 0;">
-                一站式计量经济学实证分析工具 · 专为经管类硕博生设计
+                {t("home.subtitle")}
             </p>
         </div>
         """,
@@ -35,17 +36,17 @@ def render_home() -> None:
 
     # ── 功能亮点 ──────────────────────────────────────────────────────────────
     col1, col2, col3, col4 = st.columns(4)
-    col1.markdown("🔵 **描述与诊断**\n\n相关矩阵、VIF、异方差、自相关")
-    col2.markdown("🟡 **基准回归**\n\nOLS、FE/RE、TWFE、Hausman")
-    col3.markdown("🔴 **因果推断**\n\nDID、PSM、RDD、IV/2SLS、GMM")
-    col4.markdown("🟣 **机制检验**\n\n中介、调节、分组回归、分位数")
+    col1.markdown(t("home.feature.describe"))
+    col2.markdown(t("home.feature.baseline"))
+    col3.markdown(t("home.feature.causal"))
+    col4.markdown(t("home.feature.mechanism"))
 
     st.divider()
 
     # ── 数据上传区 ────────────────────────────────────────────────────────────
-    st.markdown("## 📁 步骤1：上传数据")
+    st.markdown(t("home.step1.title"))
 
-    tab1, tab2 = st.tabs(["📤 上传数据文件", "📋 使用示例数据"])
+    tab1, tab2 = st.tabs([t("home.tab.upload"), t("home.tab.sample")])
 
     with tab1:
         _render_upload_section()
@@ -61,29 +62,27 @@ def render_home() -> None:
 def _render_upload_section() -> None:
     """文件上传区"""
     uploaded = st.file_uploader(
-        "拖拽或点击上传 CSV / Excel 文件（最大 50MB）",
+        t("home.upload.label"),
         type=["csv", "xlsx", "xls"],
-        help="支持 UTF-8 / GBK 编码 CSV，以及 Excel 2007+ (.xlsx) 格式",
+        help=t("home.upload.help"),
     )
 
     if uploaded is not None:
-        with st.spinner("正在解析数据..."):
+        with st.spinner(t("home.upload.parsing")):
             try:
                 df = load_dataframe(io.BytesIO(uploaded.read()), uploaded.name)
                 st.session_state["df"] = df
                 st.session_state["filename"] = uploaded.name
                 st.session_state["analysis_results"] = {}
-                st.success(f"✅ 数据加载成功：{len(df)} 行 × {len(df.columns)} 列")
+                st.success(t("home.upload.success", rows=len(df), cols=len(df.columns)))
                 _auto_detect_panel(df)
             except Exception as e:
-                st.error(f"❌ 数据加载失败：{str(e)}")
+                st.error(t("home.upload.error", error=str(e)))
 
 
 def _render_sample_data_section() -> None:
     """示例数据区"""
-    st.info(
-        "示例数据：200家企业 × 2010-2020年面板数据，包含 DID/PSM/RDD/IV 等分析所需变量"
-    )
+    st.info(t("home.sample.info"))
     st.markdown(
         """
         | 变量 | 说明 |
@@ -103,13 +102,13 @@ def _render_sample_data_section() -> None:
 
     col1, col2 = st.columns([1, 3])
     with col1:
-        if st.button("🎯 加载示例数据", type="primary"):
-            with st.spinner("生成示例数据..."):
+        if st.button(t("home.sample.btn.load"), type="primary"):
+            with st.spinner(t("home.sample.generating")):
                 df = generate_sample_data()
                 st.session_state["df"] = df
                 st.session_state["filename"] = "data_sample.csv"
                 st.session_state["analysis_results"] = {}
-                st.success(f"✅ 示例数据已加载：{len(df)} 行 × {len(df.columns)} 列")
+                st.success(t("home.sample.success", rows=len(df), cols=len(df.columns)))
                 _auto_detect_panel(df)
 
     with col2:
@@ -117,7 +116,7 @@ def _render_sample_data_section() -> None:
         sample_df = generate_sample_data()
         csv_bytes = sample_df.to_csv(index=False, encoding="utf-8-sig").encode("utf-8-sig")
         st.download_button(
-            "⬇️ 下载示例数据 CSV",
+            t("home.sample.btn.download"),
             data=csv_bytes,
             file_name="data_sample.csv",
             mime="text/csv",
@@ -133,10 +132,13 @@ def _auto_detect_panel(df: pd.DataFrame) -> None:
     time_col = panel_info.get("time_col")
 
     if id_col and time_col:
-        st.info(
-            f"🔍 自动检测：个体变量=`{id_col}`，时间变量=`{time_col}`"
-            f"（{panel_info['n_entities']} 个实体，{panel_info['n_periods']} 期）"
-        )
+        st.info(t(
+            "home.detect.info",
+            id_col=id_col,
+            time_col=time_col,
+            n_entities=panel_info["n_entities"],
+            n_periods=panel_info["n_periods"],
+        ))
         validation = validate_panel_data(df, id_col, time_col)
         st.session_state["validation"] = validation
 
@@ -144,7 +146,7 @@ def _auto_detect_panel(df: pd.DataFrame) -> None:
             for w in validation["warnings"]:
                 st.warning(f"⚠️ {w}")
     else:
-        st.warning("⚠️ 未能自动识别面板结构，请在分析时手动选择个体/时间变量")
+        st.warning(t("home.detect.warning"))
 
 
 def _render_data_preview() -> None:
@@ -152,27 +154,27 @@ def _render_data_preview() -> None:
     df = st.session_state["df"]
 
     st.divider()
-    st.markdown("## 👀 数据预览")
+    st.markdown(t("home.preview.title"))
 
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("总行数", f"{len(df):,}")
-    col2.metric("总列数", f"{len(df.columns)}")
+    col1.metric(t("home.preview.rows"), f"{len(df):,}")
+    col2.metric(t("home.preview.cols"), f"{len(df.columns)}")
     numeric_count = len(df.select_dtypes(include="number").columns)
-    col3.metric("数值列", f"{numeric_count}")
+    col3.metric(t("home.preview.numeric"), f"{numeric_count}")
     missing_pct = round(df.isnull().mean().mean() * 100, 2)
-    col4.metric("总体缺失率", f"{missing_pct}%")
+    col4.metric(t("home.preview.missing"), f"{missing_pct}%")
 
     # 数据前 20 行
     st.dataframe(df.head(20), use_container_width=True)
 
     # 列信息
-    with st.expander("📋 查看列详情"):
+    with st.expander(t("home.preview.col_details")):
         col_info = pd.DataFrame({
-            "列名":   df.columns,
-            "类型":   [str(df[c].dtype) for c in df.columns],
-            "非空数": [df[c].count() for c in df.columns],
-            "缺失率": [f"{df[c].isnull().mean()*100:.1f}%" for c in df.columns],
-            "唯一值": [df[c].nunique() for c in df.columns],
+            t("home.preview.col.name"):    df.columns,
+            t("home.preview.col.type"):    [str(df[c].dtype) for c in df.columns],
+            t("home.preview.col.notnull"): [df[c].count() for c in df.columns],
+            t("home.preview.col.missing"): [f"{df[c].isnull().mean()*100:.1f}%" for c in df.columns],
+            t("home.preview.col.unique"):  [df[c].nunique() for c in df.columns],
         })
         st.dataframe(col_info, use_container_width=True)
 
@@ -182,28 +184,28 @@ def _render_data_preview() -> None:
 
 def _render_panel_config(df: pd.DataFrame) -> None:
     """面板结构配置与确认按钮（跳转到步骤2）"""
-    st.markdown("### ⚙️ 配置面板结构")
+    st.markdown(t("home.panel_config.title"))
     panel_info = st.session_state.get("panel_info", {})
     all_cols = list(df.columns)
 
     col_a, col_b = st.columns(2)
     with col_a:
         default_id = _find_idx(all_cols, panel_info.get("id_col"))
-        id_col = st.selectbox("个体变量", all_cols, index=default_id, key="home_id")
+        id_col = st.selectbox(t("home.panel_config.id"), all_cols, index=default_id, key="home_id")
     with col_b:
         default_time = _find_idx(all_cols, panel_info.get("time_col"))
-        time_col = st.selectbox("时间变量", all_cols, index=default_time, key="home_time")
+        time_col = st.selectbox(t("home.panel_config.time"), all_cols, index=default_time, key="home_time")
 
     st.markdown("")  # 间距
 
     # 主行动按钮：下一步：智能引导 →
-    if st.button("✅ 下一步：智能引导 →", type="primary", key="confirm_panel"):
+    if st.button(t("home.panel_config.next"), type="primary", key="confirm_panel"):
         validation = validate_panel_data(df, id_col, time_col)
         st.session_state["panel_info"]["id_col"] = id_col
         st.session_state["panel_info"]["time_col"] = time_col
 
         if validation["valid"]:
-            st.success("✅ 面板结构配置成功！正在跳转到智能引导...")
+            st.success(t("home.panel_config.success"))
             # 步骤跳转：步骤1 → 步骤2
             st.session_state["step"] = 2
             st.session_state["page"] = "🤖 智能引导"

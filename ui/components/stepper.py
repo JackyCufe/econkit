@@ -5,12 +5,13 @@
 from __future__ import annotations
 
 import streamlit as st
+from i18n import t
 
 STEPS: list[tuple[int, str, str]] = [
-    (1, "📁", "上传数据"),
-    (2, "🤖", "智能引导"),
-    (3, "📈", "实证分析"),
-    (4, "📄", "下载报告"),
+    (1, "📁", "step.1.label"),
+    (2, "🤖", "step.2.label"),
+    (3, "📈", "step.3.label"),
+    (4, "📄", "step.4.label"),
 ]
 
 STEP_TO_PAGE: dict[int, str] = {
@@ -101,7 +102,8 @@ def render_stepper(current_step: int) -> None:
 
     # 构建步骤条 HTML（只用 class，无 inline style）
     items = ""
-    for i, (step_num, icon, name) in enumerate(STEPS):
+    for i, (step_num, icon, label_key) in enumerate(STEPS):
+        name = t(label_key)
         if step_num < current_step:
             state = "done"
             display = "✓"

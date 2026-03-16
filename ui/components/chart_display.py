@@ -16,6 +16,8 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+from i18n import t
+
 # ── 学术主题颜色 ──────────────────────────────────────────────────────────────
 COLOR_PRIMARY   = "#2C3E50"
 COLOR_ACCENT    = "#E74C3C"
@@ -27,7 +29,7 @@ COLOR_LIGHT     = "#ECF0F1"
 def render_booktabs_table(
     df: pd.DataFrame,
     title: str = "",
-    note: str = "注：括号内为标准误；*** p<0.01，** p<0.05，* p<0.1",
+    note: str = "",
     col_width: float = 1.8,
     row_height: float = 0.45,
     font_size: float = 9.5,
@@ -48,6 +50,9 @@ def render_booktabs_table(
     Returns:
         matplotlib Figure
     """
+    if not note:
+        note = t("chart.note.default")
+
     if show_index:
         display_df = df.reset_index()
         display_df.rename(columns={"index": ""}, inplace=True)
@@ -134,7 +139,7 @@ def render_booktabs_table(
 def display_result_table(
     df: pd.DataFrame,
     title: str = "",
-    note: str = "注：括号内为标准误；*** p<0.01，** p<0.05，* p<0.1",
+    note: str = "",
     highlight_col: Optional[str] = None,
     show_index: bool = True,
 ) -> None:
@@ -148,6 +153,9 @@ def display_result_table(
         highlight_col: 高亮列（暂留接口，三线表中用行色区分）
         show_index:    是否显示行索引
     """
+    if not note:
+        note = t("chart.note.default")
+
     fig = render_booktabs_table(df, title=title, note=note, show_index=show_index)
 
     # 展示图表
@@ -162,7 +170,7 @@ def display_result_table(
             buf, format="png", dpi=300, bbox_inches="tight", facecolor="white"
         )
         st.download_button(
-            label="⬇️ 下载表格 PNG",
+            label=t("chart.download.table.png"),
             data=buf.getvalue(),
             file_name=f"{title or 'table'}.png",
             mime="image/png",
@@ -171,7 +179,7 @@ def display_result_table(
     with col2:
         csv_bytes = df.to_csv(index=show_index, encoding="utf-8-sig").encode("utf-8-sig")
         st.download_button(
-            label="⬇️ 下载表格 CSV",
+            label=t("chart.download.csv"),
             data=csv_bytes,
             file_name=f"{title or 'result'}.csv",
             mime="text/csv",
@@ -205,7 +213,7 @@ def display_figure(
     buf = io.BytesIO()
     fig.savefig(buf, format="png", dpi=300, bbox_inches="tight", facecolor="white")
     st.download_button(
-        label="⬇️ 下载图表 PNG (300DPI)",
+        label=t("chart.download.png"),
         data=buf.getvalue(),
         file_name=f"{title or 'figure'}.png",
         mime="image/png",
@@ -228,16 +236,16 @@ def display_regression_summary(result: dict) -> None:
 
     # 统计量 metrics 卡片
     col1, col2, col3, col4 = st.columns(4)
-    col1.metric("观测数 N",  stats.get("n_obs", "N/A"))
-    col2.metric("R²",        stats.get("r2") or stats.get("r2_within", "N/A"))
-    col3.metric("Adj. R²",   stats.get("adj_r2", "N/A"))
-    col4.metric("F 统计量",  stats.get("f_stat", "N/A"))
+    col1.metric(t("reg.n_obs"),   stats.get("n_obs", "N/A"))
+    col2.metric(t("reg.r2"),      stats.get("r2") or stats.get("r2_within", "N/A"))
+    col3.metric(t("reg.adj_r2"),  stats.get("adj_r2", "N/A"))
+    col4.metric(t("reg.f_stat"),  stats.get("f_stat", "N/A"))
 
     if not df_r.empty:
         display_result_table(
             df_r,
-            title=f"{name} 系数表",
-            note="注：括号内为稳健标准误；*** p<0.01，** p<0.05，* p<0.1",
+            title=t("reg.coef_table", name=name),
+            note=t("chart.note.robust"),
         )
 
 
@@ -252,22 +260,22 @@ def display_did_summary(did_result: dict, title: str = "DID 回归结果") -> No
     ci    = did_result.get("did_ci", [None, None])
 
     col1, col2, col3 = st.columns(3)
-    col1.metric("DID 系数", f"{coef}{stars}")
-    col2.metric("标准误",   str(se))
-    col3.metric("p 值",     str(pval))
+    col1.metric(t("did.display.coef"), f"{coef}{stars}")
+    col2.metric(t("did.display.se"),   str(se))
+    col3.metric(t("did.display.pval"), str(pval))
 
     if ci and ci[0] is not None:
-        st.info(f"📐 95% 置信区间：[{ci[0]:.4f}, {ci[1]:.4f}]")
+        st.info(t("did.display.ci", lower=ci[0], upper=ci[1]))
 
     if isinstance(pval, float):
         if pval < 0.01:
-            st.success("✅ DID 估计在 1% 显著性水平显著")
+            st.success(t("did.display.sig1"))
         elif pval < 0.05:
-            st.success("✅ DID 估计在 5% 显著性水平显著")
+            st.success(t("did.display.sig5"))
         elif pval < 0.1:
-            st.warning("⚡ DID 估计在 10% 显著性水平显著")
+            st.warning(t("did.display.sig10"))
         else:
-            st.error("❌ DID 估计不显著（p ≥ 0.1）")
+            st.error(t("did.display.insig"))
 
 
 def display_test_result(
