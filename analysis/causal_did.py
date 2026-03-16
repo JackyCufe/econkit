@@ -257,14 +257,31 @@ def run_parallel_trend_test(
 
 
 def _joint_significance_test(model, terms: list[str]) -> dict:
-    """对多个系数进行联合显著性检验（F检验）"""
+    """
+    对多个系数进行联合显著性检验（Wald F检验）
+    使用限制矩阵方式，兼容 patsy / statsmodels 各版本
+    """
     if not terms:
         return {"f_stat": None, "p_value": None}
     try:
-        hypotheses = [(f"{t} = 0") for t in terms]
-        f_test = model.f_test(" | ".join(hypotheses))
+        import numpy as np
+        param_names = list(model.params.index)
+        # 构造限制矩阵 R：每行对应一个 term = 0 的约束
+        valid_terms = [t for t in terms if t in param_names]
+        if not valid_terms:
+            return {"f_stat": None, "p_value": None}
+
+        n_params = len(param_names)
+        R = np.zeros((len(valid_terms), n_params))
+        for row_i, term in enumerate(valid_terms):
+            col_j = param_names.index(term)
+            R[row_i, col_j] = 1.0
+
+        f_test = model.f_test(R)
+        # statistic 在不同 statsmodels 版本可能是 float 或 ndarray
+        stat_val = float(np.asarray(f_test.statistic).flat[0])
         return {
-            "f_stat":  round(float(f_test.statistic), 4),
+            "f_stat":  round(stat_val, 4),
             "p_value": round(float(f_test.pvalue), 4),
         }
     except Exception:

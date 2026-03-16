@@ -88,18 +88,18 @@ for (ds_name, df, dep_var, id_col, time_col, treat_col, post_col, did_col,
     # 2. OLS
     try:
         res = run_ols(df, dep_var, [did_col] + controls, cov_type='HC3')
-        coef = res.get('coef') or (res.get('params', {}).get(did_col))
-        # 尝试从model对象获取
-        if coef is None and 'model' in res:
-            coef = float(res['model'].params.get(did_col, np.nan))
-        record(ds_name, "OLS回归", "PASS", f"R²={res.get('r2', 'N/A')}", f"R²={res.get('r2', 'N/A')}")
+        r2 = res.get('stats', {}).get('r2', 'N/A')
+        n_obs = res.get('stats', {}).get('n_obs', 'N/A')
+        record(ds_name, "OLS回归", "PASS", f"R²={r2} n_obs={n_obs}", f"R²={r2}")
     except Exception as e:
         record(ds_name, "OLS回归", "FAIL", str(e)[:80])
 
     # 3. 面板固定效应
     try:
         res = run_panel_model(df, dep_var, [did_col] + controls, id_col, time_col, model_type='fe')
-        record(ds_name, "FE固定效应", "PASS", f"n_obs={res.get('n_obs', 'N/A')}", str(res.get('r2_within', res.get('r2', 'N/A'))))
+        r2w = res.get('stats', {}).get('r2_within', 'N/A')
+        n_obs = res.get('stats', {}).get('n_obs', 'N/A')
+        record(ds_name, "FE固定效应", "PASS", f"R²_within={r2w} n_obs={n_obs}", str(r2w))
     except Exception as e:
         record(ds_name, "FE固定效应", "FAIL", str(e)[:80])
 
@@ -241,7 +241,8 @@ except Exception as e:
 # 2. OLS
 try:
     res = run_ols(df, dep_var, [running_var, 'above_cutoff', 'covariate1', 'covariate2'], cov_type='HC3')
-    record(ds_name, "OLS回归", "PASS", f"R²={res.get('r2', 'N/A')}")
+    r2 = res.get('stats', {}).get('r2', 'N/A')
+    record(ds_name, "OLS回归", "PASS", f"R²={r2}")
 except Exception as e:
     record(ds_name, "OLS回归", "FAIL", str(e)[:80])
 
