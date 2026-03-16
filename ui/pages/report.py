@@ -59,37 +59,40 @@ def render_report() -> None:
     st.divider()
 
     # ── 生成按钮 ──────────────────────────────────────────────────────────────
-    if st.button(t("report_gen_btn"), type="primary", key="btn_gen_pdf"):
-        with st.spinner(t("report_generating")):
-            sections = _build_sections(available_results, include_sections)
-            metadata = {
-                "author":    author,
-                "date":      datetime.datetime.now().strftime("%Y年%m月%d日"),
-                "data_desc": data_desc,
-            }
-            try:
-                pdf_bytes = generate_pdf_report(
-                    title    = report_title,
-                    sections = sections,
-                    metadata = metadata,
-                )
-                st.session_state["pdf_bytes"]    = pdf_bytes
-                st.session_state["pdf_filename"] = f"{report_title}_{datetime.datetime.now().strftime('%Y%m%d')}.pdf"
-                st.success(t("report_success"))
-            except Exception as e:
-                st.error(t("report_error", error=str(e)))
-                st.code(traceback.format_exc(), language="python")
+    with st.container():
+        if st.button(t("report_gen_btn"), type="primary", key="btn_gen_pdf"):
+            with st.spinner(t("report_generating")):
+                sections = _build_sections(available_results, include_sections)
+                metadata = {
+                    "author":    author,
+                    "date":      datetime.datetime.now().strftime("%Y年%m月%d日"),
+                    "data_desc": data_desc,
+                }
+                try:
+                    pdf_bytes = generate_pdf_report(
+                        title    = report_title,
+                        sections = sections,
+                        metadata = metadata,
+                    )
+                    st.session_state["pdf_bytes"]    = pdf_bytes
+                    st.session_state["pdf_filename"] = f"{report_title}_{datetime.datetime.now().strftime('%Y%m%d')}.pdf"
+                    st.success(t("report_success"))
+                except Exception as e:
+                    st.error(t("report_error", error=str(e)))
+                    st.code(traceback.format_exc(), language="python")
 
-    # ── 下载按钮（独立区域，不与生成按钮同列）────────────────────────────────
+    # ── 下载按钮（独立区域，明显间隔）────────────────────────────────────────
     pdf_bytes = st.session_state.get("pdf_bytes")
     if pdf_bytes:
-        st.download_button(
-            label     = t("report_download_btn"),
-            data      = pdf_bytes,
-            file_name = st.session_state.get("pdf_filename", "report.pdf"),
-            mime      = "application/pdf",
-            key       = "dl_pdf_btn",
-        )
+        st.markdown("---")
+        with st.container():
+            st.download_button(
+                label     = t("report_download_btn"),
+                data      = pdf_bytes,
+                file_name = st.session_state.get("pdf_filename", "report.pdf"),
+                mime      = "application/pdf",
+                key       = "dl_pdf_btn",
+            )
 
     # ── 预览 ──────────────────────────────────────────────────────────────────
     if available_results:

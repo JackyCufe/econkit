@@ -1,173 +1,299 @@
-/* EconKit 自定义样式 */
+/* ============================================================
+   EconKit Design System — Pro-Max Edition
+   Philosophy: Notion clarity × Linear precision × Academic rigor
+   ============================================================ */
 
-/* 全局字体 */
-html, body, [class*="css"] {
-    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+/* ── Design Tokens ─────────────────────────────────────────── */
+:root {
+    --color-primary:    #2C3E50;   /* 深海军蓝（主色） */
+    --color-accent:     #16213e;
+    --color-blue:       #0f3460;
+    --color-teal:       #533483;
+    --color-success:    #22c55e;
+    --color-warning:    #f59e0b;
+    --color-danger:     #ef4444;
+
+    --color-gray-50:    #f8fafc;
+    --color-gray-100:   #f1f5f9;
+    --color-gray-200:   #e2e8f0;
+    --color-gray-400:   #94a3b8;
+    --color-gray-600:   #475569;
+    --color-gray-900:   #0f172a;
+
+    --radius-sm:        6px;
+    --radius-md:        10px;
+    --radius-lg:        16px;
+    --shadow-sm:        0 1px 3px rgba(0,0,0,0.08);
+    --shadow-md:        0 4px 16px rgba(0,0,0,0.10);
+    --transition:       all 0.2s ease;
 }
 
-/* ── 防抖动：稳定布局，避免内容加载时高度跳变 ─────────────────────────────── */
+/* ── 全局字体 ───────────────────────────────────────────────── */
+html, body, [class*="css"] {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei",
+                 "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+}
 
+/* ── 防抖动核心（Anti-Jitter） ──────────────────────────────── */
 /*
- * 核心原理：Streamlit 每次 rerun 重建 DOM 时，元素高度从 0 变为实际高度
- * 会引发布局重排（Reflow），造成页面跳动。
- * 解决方案：
- *   1. 关键容器设置 min-height，防止塌缩再弹出
- *   2. overflow-anchor: none，禁止浏览器滚动锚定补偿
- *   3. will-change: contents，提示浏览器提前分配合成层
+ * 原理：Streamlit rerun 重建 DOM 时，元素从 height=0 到实际高度
+ * 触发布局重排（Reflow）→ 页面抖动。
+ * 方案：
+ *   1. overflow-anchor: none 禁止浏览器滚动锚定补偿
+ *   2. min-height 稳定关键容器，防止塌缩弹出
+ *   3. scroll-behavior: auto 禁用平滑滚动（避免 rerun 时补偿动画）
  */
-
-/* 禁止滚动锚定（最核心，防止内容插入时页面弹跳）*/
 html {
     overflow-anchor: none !important;
     scroll-behavior: auto !important;
 }
 
-/* 主 iframe 容器不跳动 */
 section[data-testid="stAppViewContainer"] {
     overflow-anchor: none;
 }
 
-/* block-container 顶部 padding 固定，不随内容变化 */
 div.block-container {
     padding-top: 1rem !important;
     overflow-anchor: none;
+    max-width: 1100px;
 }
 
-/* Streamlit 竖向 block：取消 contain 避免触发新的层叠上下文 */
 div[data-testid="stVerticalBlock"] {
     overflow-anchor: none;
 }
 
-/* Spinner 独占行，防止推挤周围元素 */
+/* 下载按钮容器稳定高度（核心防抖：expander 折叠时高度为 0 不影响布局）*/
+div[data-testid="stExpander"] {
+    min-height: 0;
+    overflow-anchor: none;
+}
+
+/* Spinner 独占行，防止推挤 */
 div[data-testid="stSpinner"] {
     min-height: 56px;
     display: flex;
     align-items: center;
 }
 
-/* 图片/图表：加载前维持最小高度，防止塌缩再弹出 */
+/* 图表/图片：加载前维持最小高度 */
 div[data-testid="stImage"] > img {
     display: block;
     min-height: 80px;
+    border-radius: var(--radius-md);
 }
 
-/* Progress bar 稳定高度 */
+/* Progress bar 稳定 */
 div[data-testid="stProgress"] {
     min-height: 28px;
 }
 
-/* Metric 卡片稳定高度 */
+/* Metric 卡片稳定 */
 div[data-testid="metric-container"] {
     min-height: 72px;
 }
 
-/* Alert（success/warning/error/info）固定最小高度 */
+/* Alert 稳定 */
 div[data-testid="stAlert"] {
     min-height: 40px;
 }
 
-/* selectbox / multiselect 下拉不引起高度跳变 */
+/* Selectbox / multiselect 稳定 */
 div[data-testid="stSelectbox"],
 div[data-testid="stMultiSelect"] {
     min-height: 56px;
 }
 
-/* divider 防止 margin 折叠 */
+/* Divider margin 防折叠 */
 hr[data-testid="stDivider"] {
     margin-top: 0.5rem;
     margin-bottom: 0.5rem;
 }
 
-/* 主标题 */
+/* ── 主标题 ─────────────────────────────────────────────────── */
 .main-title {
     font-size: 2rem;
     font-weight: 700;
-    color: #2C3E50;
+    color: var(--color-primary);
     text-align: center;
     margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
 }
 
-/* 副标题 */
+/* ── 副标题 ─────────────────────────────────────────────────── */
 .sub-title {
     font-size: 1rem;
-    color: #7F8C8D;
+    color: var(--color-gray-400);
     text-align: center;
     margin-bottom: 2rem;
 }
 
-/* 分析卡片 */
+/* ── 卡片 ───────────────────────────────────────────────────── */
 .analysis-card {
-    background: #F8F9FA;
-    border-left: 4px solid #2C3E50;
-    border-radius: 4px;
+    background: var(--color-gray-50);
+    border-left: 4px solid var(--color-primary);
+    border-radius: var(--radius-sm);
     padding: 1rem 1.2rem;
     margin-bottom: 1rem;
+    box-shadow: var(--shadow-sm);
 }
 
-/* 显著性标注 */
-.sig-high   { color: #E74C3C; font-weight: bold; }
-.sig-medium { color: #E67E22; font-weight: bold; }
-.sig-low    { color: #F39C12; font-weight: bold; }
-.sig-none   { color: #95A5A6; }
+/* ── 按钮 ───────────────────────────────────────────────────── */
 
-/* 三线表 */
+/* Primary 按钮：深蓝填充白字 */
+.stButton > button[kind="primary"],
+div[data-testid="stButton"] > button[kind="primary"] {
+    background-color: var(--color-primary) !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 0.5rem 1.5rem !important;
+    font-weight: 600 !important;
+    font-size: 0.9rem !important;
+    transition: var(--transition) !important;
+    box-shadow: var(--shadow-sm) !important;
+}
+
+.stButton > button[kind="primary"]:hover {
+    background-color: #1a252f !important;
+    box-shadow: var(--shadow-md) !important;
+    transform: translateY(-1px);
+}
+
+/* Secondary 按钮：白底深蓝边框 */
+.stButton > button:not([kind="primary"]),
+div[data-testid="stButton"] > button:not([kind="primary"]) {
+    background-color: #ffffff !important;
+    color: var(--color-primary) !important;
+    border: 1.5px solid var(--color-gray-200) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 0.45rem 1.2rem !important;
+    font-weight: 500 !important;
+    font-size: 0.88rem !important;
+    transition: var(--transition) !important;
+}
+
+.stButton > button:not([kind="primary"]):hover {
+    border-color: var(--color-primary) !important;
+    background-color: var(--color-gray-50) !important;
+    color: var(--color-primary) !important;
+}
+
+/* 返回按钮专属：更小、更低调 */
+button[data-testid="btn_back_step"] {
+    font-size: 0.82rem !important;
+    padding: 0.3rem 0.8rem !important;
+    color: var(--color-gray-600) !important;
+    border-color: var(--color-gray-200) !important;
+}
+
+/* Download 按钮：内嵌 expander，用 secondary 风格 */
+div[data-testid="stExpander"] .stDownloadButton > button {
+    background-color: var(--color-gray-50) !important;
+    color: var(--color-primary) !important;
+    border: 1px solid var(--color-gray-200) !important;
+    border-radius: var(--radius-sm) !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    transition: var(--transition) !important;
+}
+
+div[data-testid="stExpander"] .stDownloadButton > button:hover {
+    background-color: var(--color-gray-100) !important;
+    border-color: var(--color-primary) !important;
+}
+
+/* ── 进度条颜色 ─────────────────────────────────────────────── */
+.stProgress > div > div > div {
+    background-color: var(--color-primary);
+    border-radius: 99px;
+}
+
+/* ── Metric 卡片美化 ────────────────────────────────────────── */
+div[data-testid="metric-container"] {
+    background: #ffffff;
+    border: 1px solid var(--color-gray-100);
+    border-radius: var(--radius-md);
+    padding: 0.75rem 1rem;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ── Alert / Info / Success / Warning / Error ───────────────── */
+div[data-testid="stAlert"][kind="info"],
+div.stAlert[data-testid="stAlert"] {
+    border-radius: var(--radius-md);
+}
+
+/* ── Selectbox / Multiselect ────────────────────────────────── */
+div[data-testid="stSelectbox"] > div,
+div[data-testid="stMultiSelect"] > div {
+    border-radius: var(--radius-sm) !important;
+}
+
+/* ── Expander（折叠区）────────────────────────────────────────── */
+div[data-testid="stExpander"] {
+    border: 1px solid var(--color-gray-100) !important;
+    border-radius: var(--radius-md) !important;
+    margin-top: 0.5rem;
+    box-shadow: none !important;
+}
+
+div[data-testid="stExpander"]:hover {
+    border-color: var(--color-gray-200) !important;
+}
+
+/* ── 三线表 ─────────────────────────────────────────────────── */
 .three-line-table {
-    border-top: 2px solid #2C3E50;
-    border-bottom: 2px solid #2C3E50;
-}
-.three-line-table th {
-    border-bottom: 1px solid #2C3E50;
-    background: #EBF5FB;
-    font-weight: 600;
-    color: #2C3E50;
+    border-top: 2px solid var(--color-primary);
+    border-bottom: 2px solid var(--color-primary);
 }
 
-/* 推荐方法标签 */
+.three-line-table th {
+    border-bottom: 1px solid var(--color-primary);
+    background: var(--color-gray-100);
+    font-weight: 600;
+    color: var(--color-primary);
+}
+
+/* ── 推荐方法标签 ───────────────────────────────────────────── */
 .method-tag {
     display: inline-block;
     padding: 2px 10px;
     border-radius: 12px;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     margin: 2px;
-}
-.tag-causal   { background: #FADBD8; color: #C0392B; }
-.tag-panel    { background: #D5EAF5; color: #1A5276; }
-.tag-robust   { background: #D5F5E3; color: #1D8348; }
-.tag-hetero   { background: #E8DAEF; color: #6C3483; }
-.tag-describe { background: #FDEBD0; color: #784212; }
-
-/* 进度条颜色 */
-.stProgress > div > div > div { background-color: #2C3E50; }
-
-/* 侧边栏 */
-.css-1d391kg { background-color: #F2F3F4; }
-
-/* 按钮样式 */
-.stButton > button {
-    background-color: #2C3E50;
-    color: white;
-    border-radius: 6px;
-    border: none;
-    padding: 0.5rem 1.5rem;
-    font-weight: 600;
-    transition: background-color 0.2s;
-}
-.stButton > button:hover {
-    background-color: #1A252F;
+    font-weight: 500;
 }
 
-/* 成功消息 */
+.tag-causal   { background: #fee2e2; color: #991b1b; }
+.tag-panel    { background: #dbeafe; color: #1e40af; }
+.tag-robust   { background: #dcfce7; color: #166534; }
+.tag-hetero   { background: #ede9fe; color: #5b21b6; }
+.tag-describe { background: #fef3c7; color: #92400e; }
+
+/* ── 显著性标注 ─────────────────────────────────────────────── */
+.sig-high   { color: var(--color-danger);  font-weight: 700; }
+.sig-medium { color: var(--color-warning); font-weight: 700; }
+.sig-low    { color: #d97706;              font-weight: 700; }
+.sig-none   { color: var(--color-gray-400); }
+
+/* ── 成功/警告消息框 ────────────────────────────────────────── */
 .success-box {
-    background: #D5F5E3;
-    border-left: 4px solid #27AE60;
+    background: #dcfce7;
+    border-left: 4px solid var(--color-success);
     padding: 0.8rem 1rem;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
 }
 
-/* 警告消息 */
 .warning-box {
-    background: #FDEBD0;
-    border-left: 4px solid #E67E22;
+    background: #fef3c7;
+    border-left: 4px solid var(--color-warning);
     padding: 0.8rem 1rem;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
+}
+
+/* ── 侧边栏 ─────────────────────────────────────────────────── */
+section[data-testid="stSidebar"] {
+    background-color: var(--color-gray-50);
+    border-right: 1px solid var(--color-gray-100);
 }

@@ -143,3 +143,23 @@ def render_stepper(current_step: int) -> None:
         f'<div class="ek-stepper">{items}</div>',
         unsafe_allow_html=True,
     )
+
+
+def render_back_button() -> None:
+    """在步骤2/3/4页面展示「← 返回上一步」按钮"""
+    current_step = st.session_state.get("step", 1)
+    if current_step <= 1:
+        return
+
+    col_back, _ = st.columns([1, 8])
+    with col_back:
+        prev_labels = {
+            2: t("back.to_upload"),
+            3: t("back.to_guide"),
+            4: t("back.to_analysis"),
+        }
+        label = prev_labels.get(current_step, t("back.default"))
+        if st.button(label, key="btn_back_step"):
+            st.session_state["step"] = current_step - 1
+            st.session_state["page"] = STEP_TO_PAGE[current_step - 1]
+            st.rerun()

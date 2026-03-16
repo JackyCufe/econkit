@@ -161,17 +161,12 @@ def render_analysis() -> None:
     default_index = 0
 
     if recommended:
-        st.info(t("analysis_recommended_hint", n=len(recommended)))
-        cols = st.columns(min(len(recommended), 4))
-        for i, name in enumerate(recommended[:8]):
-            method_key = _NAME_TO_METHOD_KEY.get(name)
-            if method_key:
-                option_display = t(method_key)
-                if option_display in all_options:
-                    with cols[i % 4]:
-                        if st.button(f"→ {option_display}", key=f"quick_{i}"):
-                            st.session_state["analysis_type"] = option_display
-                            st.rerun()
+        # 改用 st.info 展示推荐方法列表，去掉堆叠按钮
+        rec_names = [t(_NAME_TO_METHOD_KEY[n]) for n in recommended
+                     if n in _NAME_TO_METHOD_KEY and t(_NAME_TO_METHOD_KEY[n]) in all_options]
+        if rec_names:
+            st.info(t("analysis_recommended_hint", n=len(rec_names))
+                    + "  \n" + "、".join(f"**{r}**" for r in rec_names[:6]))
         st.divider()
         # 默认选中第一个推荐方法
         first_method_key = _NAME_TO_METHOD_KEY.get(recommended[0])
@@ -1030,7 +1025,8 @@ def _show_cached_result(key: str) -> bool:
             import matplotlib.pyplot as plt
             if plt.fignum_exists(fig.number):
                 display_figure(fig, key)
-        except Exception:
-            pass  # figure 已关闭，跳过，不影响表格展示
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).debug("cached figure unavailable: %s", e)
 
     return True

@@ -432,6 +432,39 @@ STRINGS: dict[str, str] = {
     "pdf_data_numeric": "Numeric variables: {cols}",
     "pdf_default_data_desc": "{rows} rows × {cols} columns panel data, entity: {id}, time: {time}",
 
+    # === Chart download / display ===
+    "chart.note.default": "Note: * p<0.1, ** p<0.05, *** p<0.01",
+    "chart.note.robust": "Note: Heteroskedasticity-robust standard errors in parentheses. * p<0.1, ** p<0.05, *** p<0.01",
+    "chart.download.expand": "⬇️ Download",
+    "chart.download.fig.expand": "⬇️ Download Chart",
+    "chart.download.png": "📥 PNG (300DPI)",
+    "chart.download.table.png": "📥 Table PNG",
+    "chart.download.csv": "📥 CSV Data",
+
+    # === Regression results ===
+    "reg.result_title": "Regression Results",
+    "reg.n_obs": "Observations",
+    "reg.r2": "R²",
+    "reg.adj_r2": "Adj. R²",
+    "reg.f_stat": "F-Statistic",
+    "reg.coef_table": "{name} Coefficient Table",
+
+    # === DID display ===
+    "did.display.coef": "DID Coef.",
+    "did.display.se": "Std. Error",
+    "did.display.pval": "p-value",
+    "did.display.ci": "95% CI: [{lower}, {upper}]",
+    "did.display.sig1": "✅ DID coefficient significant at 1% level",
+    "did.display.sig5": "✅ DID coefficient significant at 5% level",
+    "did.display.sig10": "⚠️ DID coefficient significant at 10% level",
+    "did.display.insig": "❌ DID coefficient not significant",
+
+    # === Back button ===
+    "back.to_upload": "← Upload Data",
+    "back.to_guide": "← Smart Guide",
+    "back.to_analysis": "← Analysis",
+    "back.default": "← Back",
+
     # === General buttons/labels ===
     "btn_run": "▶ Run",
     "btn_back": "← Back",

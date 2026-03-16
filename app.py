@@ -20,7 +20,7 @@ import streamlit as st
 from assets.academic_theme import apply_academic_theme
 apply_academic_theme()
 
-from ui.components.stepper import render_stepper, STEP_TO_PAGE, PAGE_TO_STEP
+from ui.components.stepper import render_stepper, render_back_button, STEP_TO_PAGE, PAGE_TO_STEP
 from ui.pages.home import render_home
 from ui.pages.smart_guide import render_smart_guide
 from ui.pages.analysis import render_analysis
@@ -90,6 +90,7 @@ current_step = st.session_state["step"]
 
 # ── 顶部步骤进度条（所有页面内容之上） ────────────────────────────────────────
 render_stepper(current_step)
+render_back_button()
 
 
 # ── 页面路由 ──────────────────────────────────────────────────────────────────

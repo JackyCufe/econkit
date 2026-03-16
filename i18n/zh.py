@@ -432,6 +432,39 @@ STRINGS: dict[str, str] = {
     "pdf_data_numeric": "数值变量：{cols}",
     "pdf_default_data_desc": "{rows} 行 × {cols} 列面板数据，个体：{id}，时间：{time}",
 
+    # === 图表下载 / 展示 ===
+    "chart.note.default": "注：* p<0.1，** p<0.05，*** p<0.01",
+    "chart.note.robust": "注：括号内为异方差稳健标准误，* p<0.1，** p<0.05，*** p<0.01",
+    "chart.download.expand": "⬇️ 下载",
+    "chart.download.fig.expand": "⬇️ 下载图表",
+    "chart.download.png": "📥 PNG (300DPI)",
+    "chart.download.table.png": "📥 表格 PNG",
+    "chart.download.csv": "📥 CSV 数据",
+
+    # === 回归结果 ===
+    "reg.result_title": "回归结果",
+    "reg.n_obs": "观测数",
+    "reg.r2": "R²",
+    "reg.adj_r2": "调整 R²",
+    "reg.f_stat": "F 统计量",
+    "reg.coef_table": "{name} 系数表",
+
+    # === DID 展示 ===
+    "did.display.coef": "DID 系数",
+    "did.display.se": "标准误",
+    "did.display.pval": "p 值",
+    "did.display.ci": "95% 置信区间：[{lower}, {upper}]",
+    "did.display.sig1": "✅ DID 系数在 1% 水平下显著",
+    "did.display.sig5": "✅ DID 系数在 5% 水平下显著",
+    "did.display.sig10": "⚠️ DID 系数在 10% 水平下显著",
+    "did.display.insig": "❌ DID 系数不显著",
+
+    # === 返回按钮 ===
+    "back.to_upload": "← 上传数据",
+    "back.to_guide": "← 智能引导",
+    "back.to_analysis": "← 实证分析",
+    "back.default": "← 返回",
+
     # === 通用按钮/标签 ===
     "btn_run": "▶ 运行",
     "btn_back": "← 返回",
