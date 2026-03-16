@@ -158,32 +158,39 @@ def display_result_table(
 
     fig = render_booktabs_table(df, title=title, note=note, show_index=show_index)
 
-    # 展示图表
+    # 先把图保存到 bytes，再展示，再关闭（避免 close 后 savefig 拿不到数据）
+    buf_png = io.BytesIO()
+    fig.savefig(buf_png, format="png", dpi=200, bbox_inches="tight", facecolor="white")
+    buf_png.seek(0)
+    png_bytes = buf_png.getvalue()
+
     st.pyplot(fig, use_container_width=True)
     plt.close(fig)
 
-    # 提供 PNG 和 CSV 双下载
+    # CSV 数据
+    csv_bytes = df.to_csv(index=show_index, encoding="utf-8-sig").encode("utf-8-sig")
+
+    # 稳定的 key（用 title hash，不用 id(df)，避免 rerun 时 key 变化触发抖动）
+    import hashlib
+    _key_suffix = hashlib.md5((title + str(len(df))).encode()).hexdigest()[:8]
+
+    # 提供 PNG 和 CSV 双下载（inline，不用 columns 避免布局抖动）
     col1, col2 = st.columns(2)
     with col1:
-        buf = io.BytesIO()
-        render_booktabs_table(df, title=title, note=note, show_index=show_index).savefig(
-            buf, format="png", dpi=300, bbox_inches="tight", facecolor="white"
-        )
         st.download_button(
             label=t("chart.download.table.png"),
-            data=buf.getvalue(),
+            data=png_bytes,
             file_name=f"{title or 'table'}.png",
             mime="image/png",
-            key=f"dl_png_{title}_{id(df)}",
+            key=f"dl_tpng_{_key_suffix}",
         )
     with col2:
-        csv_bytes = df.to_csv(index=show_index, encoding="utf-8-sig").encode("utf-8-sig")
         st.download_button(
             label=t("chart.download.csv"),
             data=csv_bytes,
             file_name=f"{title or 'result'}.csv",
             mime="text/csv",
-            key=f"dl_csv_{title}_{id(df)}",
+            key=f"dl_csv_{_key_suffix}",
         )
 
 
@@ -203,22 +210,35 @@ def display_figure(
     if title:
         st.markdown(f"**{title}**")
 
+    # 先 savefig 到 bytes，再 pyplot 展示，再 close
+    # 顺序很关键：close 之后再 savefig 会得到空图；pyplot 之后 close 不影响已渲染的显示
+    import hashlib
+    buf = io.BytesIO()
+    try:
+        fig.savefig(buf, format="png", dpi=150, bbox_inches="tight", facecolor="white")
+        buf.seek(0)
+        png_bytes = buf.getvalue()
+    except Exception:
+        png_bytes = b""
+
     st.pyplot(fig, use_container_width=True)
-    plt.close(fig)
+    # 不 close figure，让 session_state 里的 figure 对象保持可用（用于 PDF 生成）
+    # 内存由 matplotlib 的 figure manager 管理，Streamlit rerun 时会复用
 
     if caption:
         st.caption(caption)
 
-    # PNG 下载
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", dpi=300, bbox_inches="tight", facecolor="white")
-    st.download_button(
-        label=t("chart.download.png"),
-        data=buf.getvalue(),
-        file_name=f"{title or 'figure'}.png",
-        mime="image/png",
-        key=f"dl_fig_{title}_{id(fig)}",
-    )
+    # 稳定 key（用 title + caption hash，rerun 时不变）
+    _key_suffix = hashlib.md5((title + caption).encode()).hexdigest()[:8]
+
+    if png_bytes:
+        st.download_button(
+            label=t("chart.download.png"),
+            data=png_bytes,
+            file_name=f"{title or 'figure'}.png",
+            mime="image/png",
+            key=f"dl_fig_{_key_suffix}",
+        )
 
 
 def display_regression_summary(result: dict) -> None:

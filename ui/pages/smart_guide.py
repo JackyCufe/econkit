@@ -66,25 +66,14 @@ def render_smart_guide() -> None:
 
     st.divider()
 
-    # ── 推荐结果 + 跳转按钮 ───────────────────────────────────────────────────
+    # ── 推荐结果 ─────────────────────────────────────────────────────────────
     recommendations = st.session_state.get("recommendations", [])
     if recommendations:
         _render_recommendations(recommendations)
-
         st.divider()
-        # 主行动按钮：开始实证分析 →
-        col_btn, col_tip = st.columns([1, 3])
-        with col_btn:
-            if st.button(t("guide_goto_analysis"), type="primary", key="goto_analysis"):
-                st.session_state["recommended_methods"] = [
-                    rec.method_name for rec in recommendations
-                ]
-                # 步骤跳转：步骤2 → 步骤3
-                st.session_state["step"] = 3
-                st.session_state["page"] = "📈 实证分析"
-                st.rerun()
-        with col_tip:
-            st.info(t("guide_tip_methods_saved"))
+
+    # ── 手动选择分析方法 ──────────────────────────────────────────────────────
+    _render_manual_selection(recommendations)
 
     # ── 全部方法目录 ─────────────────────────────────────────────────────────
     st.divider()
@@ -160,6 +149,67 @@ def _render_method_card(rec: MethodRecommendation) -> None:
             with st.expander(t("guide_sub_steps_expander")):
                 for i, step in enumerate(rec.sub_steps, 1):
                     st.markdown(f"{i}. {step}")
+
+
+def _render_manual_selection(auto_recommendations: list) -> None:
+    """手动选择分析方法区域"""
+    st.markdown("#### 🔧 " + ("手动选择分析方法" if st.session_state.get("lang","zh") == "zh" else "Manually Select Methods"))
+    st.caption("在智能推荐基础上，你也可以自行勾选需要的分析方法" if st.session_state.get("lang","zh") == "zh"
+               else "You can also manually add methods on top of the AI recommendations.")
+
+    # 所有可选方法（分组展示）
+    ALL_METHODS: dict[str, list[str]] = {
+        "🔵 描述与诊断": ["描述统计", "相关矩阵", "正态性检验", "VIF 多重共线性", "异方差检验", "自相关检验"],
+        "🟡 基准回归":   ["OLS 回归", "面板固定效应（FE/RE/TWFE）", "Hausman 检验", "面板单位根检验"],
+        "🔴 因果推断":   ["DID 双重差分", "PSM 倾向得分匹配", "RDD 断点回归", "IV / 2SLS", "动态面板 GMM"],
+        "🟢 稳健性检验": ["Bootstrap 置信区间", "剔除特殊样本"],
+        "🟣 异质性与机制": ["分组回归", "分位数回归", "中介效应", "调节效应"],
+    } if st.session_state.get("lang","zh") == "zh" else {
+        "🔵 Diagnostics": ["Descriptive Stats", "Correlation Matrix", "Normality Test", "VIF", "Heteroskedasticity", "Autocorrelation"],
+        "🟡 Regression":  ["OLS", "Panel FE/RE/TWFE", "Hausman Test", "Panel Unit Root"],
+        "🔴 Causal":      ["DID", "PSM", "RDD", "IV/2SLS", "Dynamic Panel GMM"],
+        "🟢 Robustness":  ["Bootstrap CI", "Sample Exclusion"],
+        "🟣 Heterogeneity": ["Subgroup Regression", "Quantile Regression", "Mediation", "Moderation"],
+    }
+
+    # 已选方法（来自智能推荐或上次手动选择）
+    auto_names = [rec.method_name for rec in auto_recommendations]
+    default_manual = st.session_state.get("manual_methods", auto_names)
+
+    # 将所有方法名展平为列表（用于 multiselect）
+    all_method_names = [m for methods in ALL_METHODS.values() for m in methods]
+
+    # 过滤 default：只保留 all_method_names 里有的
+    valid_defaults = [m for m in default_manual if m in all_method_names]
+
+    selected = st.multiselect(
+        "选择要在第三步分析的方法：" if st.session_state.get("lang","zh") == "zh" else "Select methods for Step 3 analysis:",
+        options=all_method_names,
+        default=valid_defaults,
+        key="manual_method_select",
+    )
+
+    # 显示分组视图
+    with st.expander("📋 " + ("按分类查看" if st.session_state.get("lang","zh") == "zh" else "Browse by Category"), expanded=False):
+        for group, methods in ALL_METHODS.items():
+            st.markdown(f"**{group}**")
+            cols = st.columns(3)
+            for i, m in enumerate(methods):
+                tag = "✅" if m in selected else "○"
+                cols[i % 3].markdown(f"{tag} {m}")
+
+    # 跳转按钮
+    col_btn, col_tip = st.columns([1, 3])
+    with col_btn:
+        if st.button(t("guide_btn_start_analysis"), type="primary", key="goto_analysis_manual"):
+            st.session_state["manual_methods"]       = selected
+            st.session_state["recommended_methods"]  = selected  # analysis.py 用这个
+            st.session_state["step"] = 3
+            st.session_state["page"] = "📈 实证分析"
+            st.rerun()
+    with col_tip:
+        if selected:
+            st.info(f"{'已选' if st.session_state.get('lang','zh')=='zh' else 'Selected'} {len(selected)} {'个方法' if st.session_state.get('lang','zh')=='zh' else 'methods'}：{', '.join(selected[:4])}{'...' if len(selected)>4 else ''}")
 
 
 def _render_method_catalog() -> None:

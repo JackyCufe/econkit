@@ -211,6 +211,8 @@ def render_analysis() -> None:
 def _run_descriptive(df: pd.DataFrame) -> None:
     from analysis.descriptive import compute_descriptive_stats, plot_descriptive_stats
 
+    _show_cached_result("descriptive")
+
     numeric_cols = df.select_dtypes(include="number").columns.tolist()
     cols = st.multiselect(t("desc_vars_label"), numeric_cols, default=numeric_cols[:6],
                           key="desc_cols")
@@ -354,6 +356,8 @@ def _run_unit_root(df: pd.DataFrame) -> None:
 
 # ── OLS 回归 ──────────────────────────────────────────────────────────────────
 def _run_ols(df: pd.DataFrame) -> None:
+    _show_cached_result("ols")
+
     from analysis.panel_regression import run_ols
 
     st.markdown(t("ols_title"))
@@ -383,6 +387,8 @@ def _run_ols(df: pd.DataFrame) -> None:
 
 # ── 面板固定效应 ──────────────────────────────────────────────────────────────
 def _run_panel_fe(df: pd.DataFrame) -> None:
+    _show_cached_result("panel_fe")
+
     from analysis.panel_regression import run_panel_model
 
     st.markdown(t("panel_fe_title"))
@@ -438,6 +444,8 @@ def _run_hausman(df: pd.DataFrame) -> None:
 
 # ── DID ───────────────────────────────────────────────────────────────────────
 def _run_did(df: pd.DataFrame) -> None:
+    _show_cached_result("did")
+
     from analysis.causal_did import (
         run_basic_did, run_twfe_did,
         run_parallel_trend_test, run_placebo_test,
@@ -535,6 +543,8 @@ def _run_did(df: pd.DataFrame) -> None:
 
 # ── PSM ───────────────────────────────────────────────────────────────────────
 def _run_psm(df: pd.DataFrame) -> None:
+    _show_cached_result("psm")
+
     from analysis.causal_psm import (
         estimate_propensity_score, knn_matching,
         kernel_matching, check_covariate_balance, plot_psm_distributions,
@@ -587,6 +597,8 @@ def _run_psm(df: pd.DataFrame) -> None:
 
 # ── RDD ───────────────────────────────────────────────────────────────────────
 def _run_rdd(df: pd.DataFrame) -> None:
+    _show_cached_result("rdd")
+
     from analysis.causal_rdd import (
         run_rdd_local_linear, select_optimal_bandwidth,
         mccrary_density_test, plot_rdd,
@@ -636,6 +648,8 @@ def _run_rdd(df: pd.DataFrame) -> None:
 
 # ── IV/2SLS ───────────────────────────────────────────────────────────────────
 def _run_iv(df: pd.DataFrame) -> None:
+    _show_cached_result("iv")
+
     from analysis.causal_iv import run_iv_2sls
 
     st.markdown(t("iv_title"))
@@ -685,6 +699,8 @@ def _run_iv(df: pd.DataFrame) -> None:
 
 # ── 动态面板 GMM ───────────────────────────────────────────────────────────────
 def _run_gmm(df: pd.DataFrame) -> None:
+    _show_cached_result("gmm")
+
     from analysis.panel_regression import run_dynamic_panel_gmm
 
     st.markdown(t("gmm_title"))
@@ -747,6 +763,8 @@ def _run_gmm(df: pd.DataFrame) -> None:
 
 # ── Bootstrap ─────────────────────────────────────────────────────────────────
 def _run_bootstrap(df: pd.DataFrame) -> None:
+    _show_cached_result("bootstrap")
+
     from analysis.robustness import bootstrap_confidence_interval
 
     st.markdown(t("bootstrap_title"))
@@ -823,6 +841,8 @@ def _run_exclude_samples(df: pd.DataFrame) -> None:
 
 # ── 分组回归 ──────────────────────────────────────────────────────────────────
 def _run_subgroup(df: pd.DataFrame) -> None:
+    _show_cached_result("subgroup")
+
     from analysis.heterogeneity import run_subgroup_regression
 
     st.markdown(t("subgroup_title"))
@@ -853,6 +873,8 @@ def _run_subgroup(df: pd.DataFrame) -> None:
 
 # ── 分位数回归 ────────────────────────────────────────────────────────────────
 def _run_quantile(df: pd.DataFrame) -> None:
+    _show_cached_result("quantile")
+
     from analysis.heterogeneity import run_quantile_regression
 
     st.markdown(t("quantile_title"))
@@ -879,6 +901,8 @@ def _run_quantile(df: pd.DataFrame) -> None:
 
 # ── 中介效应 ──────────────────────────────────────────────────────────────────
 def _run_mediation(df: pd.DataFrame) -> None:
+    _show_cached_result("mediation")
+
     from analysis.heterogeneity import run_mediation_analysis
 
     st.markdown(t("mediation_title"))
@@ -927,6 +951,8 @@ def _run_mediation(df: pd.DataFrame) -> None:
 
 # ── 调节效应 ──────────────────────────────────────────────────────────────────
 def _run_moderation(df: pd.DataFrame) -> None:
+    _show_cached_result("moderation")
+
     from analysis.heterogeneity import run_moderation_analysis
 
     st.markdown(t("moderation_title"))
@@ -974,3 +1000,37 @@ def _save_result(key: str, result: dict, fig=None) -> None:
         if "analysis_figures" not in st.session_state:
             st.session_state["analysis_figures"] = {}
         st.session_state["analysis_figures"][key] = fig
+
+
+def _show_cached_result(key: str) -> bool:
+    """
+    若 session_state 中已有该 key 的分析结果，则展示并返回 True，
+    否则返回 False（调用方继续渲染运行按钮）。
+
+    展示内容：summary_df 表格 + figure（如有）
+    """
+    result = st.session_state.get("analysis_results", {}).get(key)
+    fig    = st.session_state.get("analysis_figures",  {}).get(key)
+
+    if result is None:
+        return False  # 还没跑过，不展示
+
+    # 展示已有结果提示
+    st.success("✅ " + ("已有分析结果（点击下方按钮重新运行可更新）" if st.session_state.get("lang","zh")=="zh"
+                        else "Results available (click the button below to re-run)"))
+
+    # 展示表格
+    df_r = result.get("summary_df") or result.get("stats_df")
+    if df_r is not None and not df_r.empty:
+        display_result_table(df_r, key)
+
+    # 展示图表（figure 对象可能已被 close，用 try/except 保护）
+    if fig is not None:
+        try:
+            import matplotlib.pyplot as plt
+            if plt.fignum_exists(fig.number):
+                display_figure(fig, key)
+        except Exception:
+            pass  # figure 已关闭，跳过，不影响表格展示
+
+    return True
