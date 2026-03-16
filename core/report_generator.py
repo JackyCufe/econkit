@@ -33,22 +33,33 @@ COLOR_BORDER     = colors.HexColor("#2C3E50")
 # ── 字体注册 ─────────────────────────────────────────────────────────────────
 def _register_fonts() -> bool:
     """尝试注册中文字体，返回是否成功"""
-    import os
+    import os, glob
     font_paths = [
         # macOS
         "/Library/Fonts/Songti.ttc",
         "/System/Library/Fonts/PingFang.ttc",
         "/Library/Fonts/Arial Unicode.ttf",
-        # Linux
+        # Linux / Docker（WenQuanYi，Dockerfile 已安装）
         "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+        "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
+        "/usr/share/fonts/wqy-microhei/wqy-microhei.ttc",
+        "/usr/share/fonts/wqy-zenhei/wqy-zenhei.ttc",
+        # 通配扫描 Linux 字体目录下 .ttc/.ttf
+        *glob.glob("/usr/share/fonts/**/*.ttc", recursive=True),
+        *glob.glob("/usr/share/fonts/**/*.ttf", recursive=True),
+        *glob.glob("/usr/local/share/fonts/**/*.ttc", recursive=True),
+        *glob.glob("/usr/local/share/fonts/**/*.ttf", recursive=True),
     ]
+    seen = set()
     for path in font_paths:
-        if os.path.exists(path):
-            try:
-                pdfmetrics.registerFont(TTFont("ChineseFont", path))
-                return True
-            except Exception:
-                continue
+        if path in seen or not os.path.exists(path):
+            continue
+        seen.add(path)
+        try:
+            pdfmetrics.registerFont(TTFont("ChineseFont", path))
+            return True
+        except Exception:
+            continue
     return False
 
 

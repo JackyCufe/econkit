@@ -7,28 +7,48 @@ html, body, [class*="css"] {
 
 /* ── 防抖动：稳定布局，避免内容加载时高度跳变 ─────────────────────────────── */
 
-/* 主内容区固定最小高度，防止加载时页面塌缩 */
-section[data-testid="stAppViewContainer"] > div:first-child {
+/*
+ * 核心原理：Streamlit 每次 rerun 重建 DOM 时，元素高度从 0 变为实际高度
+ * 会引发布局重排（Reflow），造成页面跳动。
+ * 解决方案：
+ *   1. 关键容器设置 min-height，防止塌缩再弹出
+ *   2. overflow-anchor: none，禁止浏览器滚动锚定补偿
+ *   3. will-change: contents，提示浏览器提前分配合成层
+ */
+
+/* 禁止滚动锚定（最核心，防止内容插入时页面弹跳）*/
+html {
+    overflow-anchor: none !important;
+    scroll-behavior: auto !important;
+}
+
+/* 主 iframe 容器不跳动 */
+section[data-testid="stAppViewContainer"] {
     overflow-anchor: none;
 }
 
-/* Streamlit block 容器稳定性 */
+/* block-container 顶部 padding 固定，不随内容变化 */
+div.block-container {
+    padding-top: 1rem !important;
+    overflow-anchor: none;
+}
+
+/* Streamlit 竖向 block：取消 contain 避免触发新的层叠上下文 */
 div[data-testid="stVerticalBlock"] {
-    contain: layout style;
+    overflow-anchor: none;
 }
 
 /* Spinner 独占行，防止推挤周围元素 */
 div[data-testid="stSpinner"] {
-    min-height: 60px;
+    min-height: 56px;
     display: flex;
     align-items: center;
 }
 
-/* 图片/图表占位：图加载前维持高度，防止塌缩再弹出 */
-div[data-testid="stImage"] img,
-div[data-testid="stPyplotGlobalUse"] img {
+/* 图片/图表：加载前维持最小高度，防止塌缩再弹出 */
+div[data-testid="stImage"] > img {
     display: block;
-    min-height: 100px;
+    min-height: 80px;
 }
 
 /* Progress bar 稳定高度 */
@@ -36,19 +56,26 @@ div[data-testid="stProgress"] {
     min-height: 28px;
 }
 
-/* Metric 卡片稳定高度，防止数字出现时高度突变 */
+/* Metric 卡片稳定高度 */
 div[data-testid="metric-container"] {
-    min-height: 80px;
+    min-height: 72px;
 }
 
-/* 减少 Streamlit 自带的 padding/margin 跳变 */
-div.block-container {
-    padding-top: 1rem !important;
-}
-
-/* Alert 组件（st.success/warning/error/info）固定最小高度 */
+/* Alert（success/warning/error/info）固定最小高度 */
 div[data-testid="stAlert"] {
-    min-height: 44px;
+    min-height: 40px;
+}
+
+/* selectbox / multiselect 下拉不引起高度跳变 */
+div[data-testid="stSelectbox"],
+div[data-testid="stMultiSelect"] {
+    min-height: 56px;
+}
+
+/* divider 防止 margin 折叠 */
+hr[data-testid="stDivider"] {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
 }
 
 /* 主标题 */
