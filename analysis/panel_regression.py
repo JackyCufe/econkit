@@ -213,7 +213,15 @@ def run_hausman_test(
     diff = b_fe - b_re
     try:
         V_diff = V_fe - V_re
-        H = float(diff @ np.linalg.pinv(V_diff) @ diff)
+
+        # 数值修正：V_fe - V_re 理论上正半定，但有限样本数值误差可能出现微小负特征值。
+        # 标准处理：对 V_diff 做谱分解，截断负特征值为0（保证正半定），再取广义逆。
+        eigvals, eigvecs = np.linalg.eigh(V_diff)
+        eigvals_pos = np.maximum(eigvals, 0)
+        V_diff_pd = eigvecs @ np.diag(eigvals_pos) @ eigvecs.T
+        H_raw = float(diff @ np.linalg.pinv(V_diff_pd) @ diff)
+        H = max(H_raw, 0)  # 保险：H 为 chi2，不能为负
+
         df_chi = len(common_vars)
         from scipy.stats import chi2
         p_val = 1 - chi2.cdf(H, df=df_chi)
