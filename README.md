@@ -23,7 +23,7 @@ tags:
 
 **一站式计量经济学实证分析工具**
 
-专为中国经管类硕博生设计 | 无需写代码 | 一键生成学术级图表
+专为中国经管类学生设计（本科 / 硕士 / 博士）| 无需写代码 | 一键生成学术级图表
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
