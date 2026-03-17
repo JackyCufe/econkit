@@ -63,14 +63,17 @@ def run_dynamic_panel_gmm(
             options_parts.append("fod")
 
         options_str = " ".join(options_parts)
-        parts = [
-            f"{dep_var} {lag_terms} {controls_str}",
-            f"{iv_str} {exog_iv_str}".strip(),
-        ]
+        # pydynpd abond 命令格式：用 | 分隔三段
+        # 第1段：因变量 滞后项 控制变量
+        # 第2段：工具变量规格（gmm() + iv()）
+        # 第3段：选项（nolevel / collapse / timedumm 等）
+        seg1 = f"{dep_var} {lag_terms} {controls_str}"
+        seg2 = f"{iv_str} {exog_iv_str}".strip()
+        parts = [seg1, seg2]
         if options_str:
             parts.append(options_str)
 
-        command_str = " ".join(parts)
+        command_str = " | ".join(parts)
         method_name = (
             f"差分GMM（Arellano-Bond，L{lags}，工具变量L{iv_lags_min}:{iv_lags_max}）"
             if gmm_type == "difference"
@@ -124,6 +127,20 @@ def run_dynamic_panel_gmm(
             ),
         }
 
+        # 检测差分GMM中控制变量是否退化为0（常见于高持续性面板变量）
+        degenerate_vars = [
+            row["变量"] for _, row in summary_df.iterrows()
+            if abs(row["系数"]) < 1e-8 and row["变量"] != f"L1.{dep_var}"
+        ]
+        degenerate_warning = None
+        if gmm_type == "difference" and degenerate_vars:
+            degenerate_warning = (
+                f"⚠️ 差分GMM中以下控制变量系数退化为0：{degenerate_vars}。"
+                "可能原因：这些变量在个体内高度持续（差分后信息量几乎为零）。"
+                "建议：①改用系统GMM（gmm_type='system'）以保留水平方程；"
+                "②或在控制变量中改用差分形式 Δx。"
+            )
+
         return {
             "name":         method_name,
             "gmm_type":     gmm_type,
@@ -136,6 +153,7 @@ def run_dynamic_panel_gmm(
             },
             "ar_tests":     ar_tests,
             "hansen":       hansen_result,
+            "degenerate_warning": degenerate_warning,
             "ar_note": (
                 "✅ 使用 pydynpd 实现真正的 Arellano-Bond / Blundell-Bond GMM，"
                 "包含 Windmeijer(2005) 有限样本校正标准误、Hansen过度识别检验、AR(1)/AR(2)序列相关检验。"

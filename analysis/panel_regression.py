@@ -192,6 +192,8 @@ def run_hausman_test(
 
     Returns: 检验结果字典
     """
+    # 注：严格 Hausman 要求同方差假设（unadjusted），此处用 robust 是近似做法，
+    # 实践中可接受；若需严格检验请使用 Wooldridge (2002) 异方差稳健版本。
     fe_res = run_panel_model(df, dep_var, indep_vars, id_col, time_col, "fe", "robust")
     re_res = run_panel_model(df, dep_var, indep_vars, id_col, time_col, "re")
 

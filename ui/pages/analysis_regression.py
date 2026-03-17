@@ -180,6 +180,9 @@ def _run_gmm(df: pd.DataFrame, _show_cached_result, _save_result) -> None:
                     col_c.metric(t("gmm_hansen_pval_label"), str(h["p值"]))
                     st.info(h["结论"])
 
+                if result.get("degenerate_warning"):
+                    st.warning(result["degenerate_warning"])
+
                 if result.get("ar_note"):
                     st.success(result["ar_note"])
                 _save_result("gmm", result)
