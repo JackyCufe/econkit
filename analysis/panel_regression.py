@@ -275,13 +275,15 @@ def test_panel_unit_root(
     if not adf_pvals:
         return {"error": "无法计算单位根检验（数据量不足）"}
 
-    # IPS W统计量近似：标准化 ADF 统计量
+    # 判断依据：各截面 ADF 检验的 p 值拒绝比例（非标准 IPS，不报 W 统计量）
+    # 注：ADF 统计量越负越倾向平稳；但面板汇总以 p<0.05 的拒绝比例为主判据，
+    #     均值 ADF 仅作辅助参考，不可直接与标准临界值比较。
     n_tests = len(adf_stats)
     mean_adf = np.mean(adf_stats)
     reject_pct = np.mean([p < 0.05 for p in adf_pvals]) * 100
 
     return {
-        "检验方法":     "ADF 面板汇总（简化版）",
+        "检验方法":     "ADF 面板汇总（简化版，非标准LLC/IPS）",
         "截面数":       n_tests,
         "平均ADF统计量": round(float(mean_adf), 4),
         "拒绝单位根比例": f"{reject_pct:.1f}%",
