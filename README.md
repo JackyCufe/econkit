@@ -21,17 +21,20 @@ tags:
 
 # 📊 EconKit
 
-**一站式计量经济学实证分析工具**
+**一站式计量经济学实证分析工具 | All-in-one Econometrics Toolkit**
 
-专为中国经管类学生设计（本科 / 硕士 / 博士）| 无需写代码 | 一键生成学术级图表
+专为中国经管类学生设计（本科毕设 / 硕博论文）| 无需写代码 | 一键生成学术级图表与 PDF 报告
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/)
 [![Streamlit](https://img.shields.io/badge/Built%20with-Streamlit-red.svg)](https://streamlit.io/)
 [![HuggingFace](https://img.shields.io/badge/🤗-HuggingFace%20Space-yellow)](https://huggingface.co/spaces/JackyCufe/econkit)
 [![ModelScope](https://img.shields.io/badge/🤖-魔搭社区-blueviolet)](https://modelscope.cn/studios/JackyCufe/EconKit/summary)
+[![Stars](https://img.shields.io/github/stars/JackyCufe/econkit?style=social)](https://github.com/JackyCufe/econkit)
 
-**[🚀 在线体验（魔搭）](https://modelscope.cn/studios/JackyCufe/EconKit/summary)** · **[🚀 在线体验（HuggingFace）](https://huggingface.co/spaces/JackyCufe/econkit)** · **[📖 使用文档](#-分析流程建议)** · **[☕ 支持作者](https://ifdian.net/a/jackycufe)**
+**[🚀 在线体验（魔搭，国内推荐）](https://modelscope.cn/studios/JackyCufe/EconKit/summary)** · **[🚀 在线体验（HuggingFace）](https://huggingface.co/spaces/JackyCufe/econkit)** · **[☕ 支持作者](https://ifdian.net/a/jackycufe)**
+
+> **关键词**：DID 双重差分 | PSM 倾向得分匹配 | RDD 断点回归 | IV 工具变量 | 面板固定效应 | 动态面板 GMM | 中介效应 | 调节效应 | 计量经济学 | 毕业论文 | 实证分析
 
 </div>
 
