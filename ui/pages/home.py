@@ -64,23 +64,9 @@ def render_home() -> None:
     with tab2:
         _render_sample_data_section()
 
-    # ── 数据预览：divider + metric 行始终渲染，防止从无到有的高度跳变 ──────────
-    st.divider()
-    df = st.session_state.get("df")
-    col1, col2, col3, col4 = st.columns(4)
-    if df is not None:
-        numeric_count = len(df.select_dtypes(include="number").columns)
-        missing_pct = round(df.isnull().mean().mean() * 100, 2)
-        col1.metric(t("home_preview_rows"),    f"{len(df):,}")
-        col2.metric(t("home_preview_cols"),    f"{len(df.columns)}")
-        col3.metric(t("home_preview_numeric"), f"{numeric_count}")
-        col4.metric(t("home_preview_missing"), f"{missing_pct}%")
-        _render_data_preview_detail(df)
-    else:
-        col1.metric(t("home_preview_rows"),    "—")
-        col2.metric(t("home_preview_cols"),    "—")
-        col3.metric(t("home_preview_numeric"), "—")
-        col4.metric(t("home_preview_missing"), "—")
+    # ── 数据预览 ──────────────────────────────────────────────────────────────
+    if st.session_state.get("df") is not None:
+        _render_data_preview()
 
 
 # @st.fragment  # disabled: requires streamlit>=1.37
