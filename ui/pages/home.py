@@ -64,9 +64,18 @@ def render_home() -> None:
     with tab2:
         _render_sample_data_section()
 
-    # ── 数据预览 ──────────────────────────────────────────────────────────────
-    if st.session_state.get("df") is not None:
+    # ── 数据预览（metric 骨架始终渲染，避免从无到有的高度跳变）────────────────
+    df = st.session_state.get("df")
+    if df is not None:
         _render_data_preview()
+    else:
+        # 始终渲染 metric 行占位（与有数据时完全相同的组件，高度一致）
+        st.divider()
+        col1, col2, col3, col4 = st.columns(4)
+        col1.metric(t("home_preview_rows"),    "—")
+        col2.metric(t("home_preview_cols"),    "—")
+        col3.metric(t("home_preview_numeric"), "—")
+        col4.metric(t("home_preview_missing"), "—")
 
 
 @st.fragment
