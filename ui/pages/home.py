@@ -69,8 +69,9 @@ def render_home() -> None:
         _render_data_preview()
 
 
+@st.fragment
 def _render_upload_section() -> None:
-    """文件上传区"""
+    """文件上传区（fragment：上传后局部刷新，不触发全页 reflow → 减少 CLS）"""
     uploaded = st.file_uploader(
         t("home_upload_label"),
         type=["csv", "xlsx", "xls"],
@@ -86,12 +87,15 @@ def _render_upload_section() -> None:
                 st.session_state["analysis_results"] = {}
                 st.success(t("home_upload_success", rows=len(df), cols=len(df.columns)))
                 _auto_detect_panel(df)
+                # scope="app" 让外层感知到 df 已更新
+                st.rerun(scope="app")
             except Exception as e:
                 st.error(t("home_upload_error", error=str(e)))
 
 
+@st.fragment
 def _render_sample_data_section() -> None:
-    """示例数据区"""
+    """示例数据区（fragment：加载时只重渲染本区域，不触发整页 reflow → 减少 CLS）"""
     st.info(t("home_sample_info"))
     st.markdown(
         """
@@ -118,8 +122,9 @@ def _render_sample_data_section() -> None:
                 st.session_state["df"] = df
                 st.session_state["filename"] = "data_sample.csv"
                 st.session_state["analysis_results"] = {}
-                st.success(t("home_sample_success", rows=len(df), cols=len(df.columns)))
                 _auto_detect_panel(df)
+            # scope="app" 从 fragment 内触发全页刷新，让外层 _render_data_preview 感知到 df
+            st.rerun(scope="app")
 
     with col2:
         # 提供样本数据下载
