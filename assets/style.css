@@ -297,3 +297,44 @@ section[data-testid="stSidebar"] {
     background-color: var(--color-gray-50);
     border-right: 1px solid var(--color-gray-100);
 }
+
+/* ── 深度反抖动（2026-03-25 实测补丁）──────────────────────────
+ * 问题：stMainBlockContainer 从 height=256px 跳到 582px，CLS 0.08+
+ * 根因：数据加载/分析结果插入时主容器高度突变，浏览器重排整页
+ * 方案：
+ *   1. 主容器 contain:layout 隔离布局计算范围
+ *   2. will-change:transform 提升到合成层（隔离 reflow 传播）
+ *   3. 关键动态区域 min-height 防塌缩
+ */
+div[data-testid="stMainBlockContainer"] {
+    contain: layout style !important;
+    will-change: transform;
+    min-height: 80vh;
+}
+
+/* 防止 stVerticalBlockBorderWrapper 在内容插入时推移外部布局 */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    contain: layout;
+    overflow-anchor: none;
+}
+
+/* 数据表格占位：未渲染前不塌缩 */
+div[data-testid="stDataFrame"],
+div[data-testid="stTable"] {
+    min-height: 120px;
+    overflow-anchor: none;
+}
+
+/* 图表区域占位 */
+div[data-testid="stArrowVegaLiteChart"],
+div[data-testid="stPlotlyChart"],
+div.js-plotly-plot {
+    min-height: 300px;
+    overflow-anchor: none;
+}
+
+/* metric 卡片行：上传后突然出现导致的整体偏移 */
+div[data-testid="stHorizontalBlock"] {
+    min-height: 60px;
+    overflow-anchor: none;
+}
