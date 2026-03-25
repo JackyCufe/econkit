@@ -87,8 +87,10 @@ def _render_upload_section() -> None:
                 st.session_state["analysis_results"] = {}
                 st.success(t("home_upload_success", rows=len(df), cols=len(df.columns)))
                 _auto_detect_panel(df)
-                # scope="app" 让外层感知到 df 已更新
-                st.rerun()  # was scope="app"
+                # 上传后直接跳步骤2，不在首页渲染 data_preview（避免 CLS）
+                st.session_state["step"] = 2
+                st.session_state["page"] = "🤖 智能引导"
+                st.rerun()
             except Exception as e:
                 st.error(t("home_upload_error", error=str(e)))
 
@@ -123,8 +125,10 @@ def _render_sample_data_section() -> None:
                 st.session_state["filename"] = "data_sample.csv"
                 st.session_state["analysis_results"] = {}
                 _auto_detect_panel(df)
-            # scope="app" 从 fragment 内触发全页刷新，让外层 _render_data_preview 感知到 df
-            st.rerun()  # was scope="app"
+            # 加载完直接跳步骤2，不在首页显示 data_preview（避免大块内容插入导致 CLS）
+            st.session_state["step"] = 2
+            st.session_state["page"] = "🤖 智能引导"
+            st.rerun()
 
     with col2:
         # 提供样本数据下载
