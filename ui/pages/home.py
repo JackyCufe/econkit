@@ -20,6 +20,16 @@ from i18n import t
 
 def render_home() -> None:
     """渲染首页（步骤1：上传数据）"""
+    # 注入 CSS：数据预览区预留最小高度，防止加载后大块内容突然跳出（减少 CLS）
+    st.markdown(
+        """
+        <style>
+        .ek-data-preview { min-height: 300px; }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
+
     st.markdown(
         f"""
         <div style="text-align:center; padding:2rem 0 1rem 0;">
@@ -54,9 +64,11 @@ def render_home() -> None:
     with tab2:
         _render_sample_data_section()
 
-    # ── 数据预览 ──────────────────────────────────────────────────────────────
+    # ── 数据预览（带占位容器，防止从 0 高度硬跳出）────────────────────────────
+    st.markdown('<div class="ek-data-preview">', unsafe_allow_html=True)
     if st.session_state.get("df") is not None:
         _render_data_preview()
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 def _render_upload_section() -> None:
