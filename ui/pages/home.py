@@ -64,9 +64,23 @@ def render_home() -> None:
     with tab2:
         _render_sample_data_section()
 
-    # ── 数据预览 ──────────────────────────────────────────────────────────────
-    if st.session_state.get("df") is not None:
-        _render_data_preview()
+    # ── 数据预览：divider + metric 行始终渲染，防止从无到有的高度跳变 ──────────
+    st.divider()
+    df = st.session_state.get("df")
+    col1, col2, col3, col4 = st.columns(4)
+    if df is not None:
+        numeric_count = len(df.select_dtypes(include="number").columns)
+        missing_pct = round(df.isnull().mean().mean() * 100, 2)
+        col1.metric(t("home_preview_rows"),    f"{len(df):,}")
+        col2.metric(t("home_preview_cols"),    f"{len(df.columns)}")
+        col3.metric(t("home_preview_numeric"), f"{numeric_count}")
+        col4.metric(t("home_preview_missing"), f"{missing_pct}%")
+        _render_data_preview_detail(df)
+    else:
+        col1.metric(t("home_preview_rows"),    "—")
+        col2.metric(t("home_preview_cols"),    "—")
+        col3.metric(t("home_preview_numeric"), "—")
+        col4.metric(t("home_preview_missing"), "—")
 
 
 # @st.fragment  # disabled: requires streamlit>=1.37
@@ -167,19 +181,22 @@ def _auto_detect_panel(df: pd.DataFrame) -> None:
 
 
 def _render_data_preview() -> None:
-    """数据预览区"""
+    """数据预览区（兼容旧调用，内部调用 detail）"""
     df = st.session_state["df"]
-
     st.divider()
-    st.markdown(t("home_data_preview_title"))
-
     col1, col2, col3, col4 = st.columns(4)
+    numeric_count = len(df.select_dtypes(include="number").columns)
+    missing_pct = round(df.isnull().mean().mean() * 100, 2)
     col1.metric(t("home_preview_rows"), f"{len(df):,}")
     col2.metric(t("home_preview_cols"), f"{len(df.columns)}")
-    numeric_count = len(df.select_dtypes(include="number").columns)
     col3.metric(t("home_preview_numeric"), f"{numeric_count}")
-    missing_pct = round(df.isnull().mean().mean() * 100, 2)
     col4.metric(t("home_preview_missing"), f"{missing_pct}%")
+    _render_data_preview_detail(df)
+
+
+def _render_data_preview_detail(df) -> None:
+    """数据预览详情（divider + metric 已在外层渲染）"""
+    st.markdown(t("home_data_preview_title"))
 
     # 数据前 20 行
     st.dataframe(df.head(20), use_container_width=True)
