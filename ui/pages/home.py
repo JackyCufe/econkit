@@ -90,9 +90,8 @@ def _render_upload_section() -> None:
                 st.error(t("home_upload_error", error=str(e)))
 
 
-@st.fragment
 def _render_sample_data_section() -> None:
-    """示例数据区（fragment：加载示例数据后局部刷新，不触发全页 rerun 减少 CLS）"""
+    """示例数据区"""
     st.info(t("home_sample_info"))
     st.markdown(
         """
