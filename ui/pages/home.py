@@ -172,7 +172,12 @@ def _auto_detect_panel(df: pd.DataFrame) -> None:
 
 
 def _render_data_summary_only() -> None:
-    """首页轻量摘要：只显示 metric 行 + 下一步按钮，不渲染大 dataframe（减少 CLS）"""
+    """首页轻量摘要（与 _render_data_preview 相同，保留兼容）"""
+    _render_data_preview()
+
+
+def _render_data_preview() -> None:
+    """数据预览区：只显示 metric + 下一步按钮，dataframe 移到步骤2（消除大块插入 CLS）"""
     df = st.session_state["df"]
     st.divider()
     numeric_count = len(df.select_dtypes(include="number").columns)
@@ -182,25 +187,12 @@ def _render_data_summary_only() -> None:
     col2.metric(t("home_preview_cols"),    f"{len(df.columns)}")
     col3.metric(t("home_preview_numeric"), f"{numeric_count}")
     col4.metric(t("home_preview_missing"), f"{missing_pct}%")
-    st.success(f"✅ 数据已加载：{st.session_state.get('filename', '')} — 完整预览和配置在下一步")
-    # 自动跳步骤2
-    st.session_state["step"] = 2
-    st.session_state["page"] = "🤖 智能引导"
-    st.rerun()
-
-
-def _render_data_preview() -> None:
-    """数据预览区（完整版，供步骤2使用）"""
-    df = st.session_state["df"]
-    st.divider()
-    col1, col2, col3, col4 = st.columns(4)
-    numeric_count = len(df.select_dtypes(include="number").columns)
-    missing_pct = round(df.isnull().mean().mean() * 100, 2)
-    col1.metric(t("home_preview_rows"), f"{len(df):,}")
-    col2.metric(t("home_preview_cols"), f"{len(df.columns)}")
-    col3.metric(t("home_preview_numeric"), f"{numeric_count}")
-    col4.metric(t("home_preview_missing"), f"{missing_pct}%")
-    _render_data_preview_detail(df)
+    st.success(f"✅ 数据已加载：**{st.session_state.get('filename', '')}**")
+    if st.button(t("home_panel_config_next"), type="primary", key="confirm_panel_quick"):
+        panel_info = st.session_state.get("panel_info", {})
+        st.session_state["step"] = 2
+        st.session_state["page"] = "🤖 智能引导"
+        st.rerun()
 
 
 def _render_data_preview_detail(df) -> None:
