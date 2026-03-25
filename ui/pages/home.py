@@ -64,9 +64,10 @@ def render_home() -> None:
     with tab2:
         _render_sample_data_section()
 
-    # ── 数据预览 ──────────────────────────────────────────────────────────────
+    # ── 数据预览（首页只显示 metric 摘要，完整预览在步骤2）──────────────────
+    # 避免 dataframe+配置区大块插入导致 CLS，首页只展示轻量摘要
     if st.session_state.get("df") is not None:
-        _render_data_preview()
+        _render_data_summary_only()
 
 
 # @st.fragment  # disabled: requires streamlit>=1.37
@@ -170,8 +171,26 @@ def _auto_detect_panel(df: pd.DataFrame) -> None:
         st.warning(t("home_detect_warning"))
 
 
+def _render_data_summary_only() -> None:
+    """首页轻量摘要：只显示 metric 行 + 下一步按钮，不渲染大 dataframe（减少 CLS）"""
+    df = st.session_state["df"]
+    st.divider()
+    numeric_count = len(df.select_dtypes(include="number").columns)
+    missing_pct = round(df.isnull().mean().mean() * 100, 2)
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric(t("home_preview_rows"),    f"{len(df):,}")
+    col2.metric(t("home_preview_cols"),    f"{len(df.columns)}")
+    col3.metric(t("home_preview_numeric"), f"{numeric_count}")
+    col4.metric(t("home_preview_missing"), f"{missing_pct}%")
+    st.success(f"✅ 数据已加载：{st.session_state.get('filename', '')} — 完整预览和配置在下一步")
+    # 自动跳步骤2
+    st.session_state["step"] = 2
+    st.session_state["page"] = "🤖 智能引导"
+    st.rerun()
+
+
 def _render_data_preview() -> None:
-    """数据预览区（兼容旧调用，内部调用 detail）"""
+    """数据预览区（完整版，供步骤2使用）"""
     df = st.session_state["df"]
     st.divider()
     col1, col2, col3, col4 = st.columns(4)
