@@ -64,9 +64,16 @@ def render_home() -> None:
     with tab2:
         _render_sample_data_section()
 
-    # ── 数据预览 ──────────────────────────────────────────────────────────────
+    # ── 数据预览区（空状态 metric 占位，防止加载后从 0 高度插入）─────────────
     if st.session_state.get("df") is not None:
         _render_data_preview()
+    else:
+        # 预占 metric 卡片行高度（实测加载后约 100px），防止插入时推挤上方内容
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric(t("home_preview_rows"), "—")
+        c2.metric(t("home_preview_cols"), "—")
+        c3.metric(t("home_preview_numeric"), "—")
+        c4.metric(t("home_preview_missing"), "—")
 
 
 def _render_upload_section() -> None:
