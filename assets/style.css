@@ -338,3 +338,21 @@ div[data-testid="stHorizontalBlock"] {
     min-height: 60px;
     overflow-anchor: none;
 }
+
+/* ── 终极稳定方案（2026-03-25 v3）──────────────────────────────
+ * 原理：让 stApp 和主容器始终撑满视口高度（min-height: 100vh）
+ * 这样内容增减只是「填满已有空间」而非「新增高度」→ CLS ≈ 0
+ */
+.stApp {
+    min-height: 100vh !important;
+}
+
+/* Streamlit 主渲染容器固定撑满 */
+section[data-testid="stAppViewContainer"] {
+    min-height: 100vh !important;
+}
+
+div[data-testid="stMainBlockContainer"] {
+    min-height: calc(100vh - 80px) !important;
+    contain: layout style !important;
+}

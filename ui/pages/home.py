@@ -64,11 +64,23 @@ def render_home() -> None:
     with tab2:
         _render_sample_data_section()
 
-    # ── 数据预览（带占位容器，防止从 0 高度硬跳出）────────────────────────────
-    st.markdown('<div class="ek-data-preview">', unsafe_allow_html=True)
-    if st.session_state.get("df") is not None:
-        _render_data_preview()
-    st.markdown('</div>', unsafe_allow_html=True)
+    # ── 数据预览（空状态预占位，防止加载后大块内容从 0 高度跳出）─────────────
+    with st.container():
+        if st.session_state.get("df") is not None:
+            _render_data_preview()
+        else:
+            st.markdown(
+                """
+                <div style="min-height:300px; display:flex; align-items:center;
+                            justify-content:center; color:#ced4da;
+                            border:2px dashed #dee2e6; border-radius:10px;
+                            margin:1rem 0; flex-direction:column; gap:8px;">
+                    <div style="font-size:2.5rem">📊</div>
+                    <div style="font-size:0.9rem">上传或加载示例数据后，此处显示数据预览</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
 
 
 def _render_upload_section() -> None:
