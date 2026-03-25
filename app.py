@@ -1,6 +1,6 @@
 """
 EconKit - 计量经济学在线分析工具
-Streamlit 主入口
+Streamlit 主入口 (v2.1 - 2026-03-25)
 
 运行方式：
     cd /Users/jacky/.openclaw/workspace/econkit
