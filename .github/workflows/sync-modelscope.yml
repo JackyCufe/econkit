@@ -1,0 +1,20 @@
+name: Sync to ModelScope
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Push to ModelScope
+        env:
+          MS_TOKEN: ${{ secrets.MODELSCOPE_TOKEN }}
+        run: |
+          git remote add modelscope https://JackyCufe:${MS_TOKEN}@www.modelscope.cn/studios/JackyCufe/EconKit.git
+          git push modelscope main:master --force
