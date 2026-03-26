@@ -21,7 +21,9 @@ tags:
 
 # 📊 EconKit
 
-**一站式计量经济学实证分析工具 | All-in-one Econometrics Toolkit**
+**All-in-one Econometrics Toolkit | 一站式计量经济学实证分析工具**
+
+Designed for Chinese economics & management students (undergraduate thesis / master's / PhD) | No coding required | One-click academic charts and PDF reports
 
 专为中国经管类学生设计（本科毕设 / 硕博论文）| 无需写代码 | 一键生成学术级图表与 PDF 报告
 
@@ -32,12 +34,92 @@ tags:
 [![ModelScope](https://img.shields.io/badge/🤖-魔搭社区-blueviolet)](https://modelscope.cn/studios/JackyCufe/EconKit/summary)
 [![Stars](https://img.shields.io/github/stars/JackyCufe/econkit?style=social)](https://github.com/JackyCufe/econkit)
 
-**[🚀 在线体验（魔搭，国内推荐）](https://modelscope.cn/studios/JackyCufe/EconKit/summary)** · **[🚀 在线体验（HuggingFace）](https://huggingface.co/spaces/JackyCufe/econkit)** · **[☕ 支持作者](https://ifdian.net/a/jackycufe)**
+**[🚀 Live Demo — ModelScope (China)](https://modelscope.cn/studios/JackyCufe/EconKit/summary)** · **[🚀 Live Demo — HuggingFace (Global)](https://huggingface.co/spaces/JackyCufe/econkit)** · **[☕ Support](https://ifdian.net/a/jackycufe)**
 
-> **关键词**：DID 双重差分 | PSM 倾向得分匹配 | RDD 断点回归 | IV 工具变量 | 面板固定效应 | 动态面板 GMM | 中介效应 | 调节效应 | 计量经济学 | 毕业论文 | 实证分析
+> **Keywords**: DID Difference-in-Differences | PSM Propensity Score Matching | RDD Regression Discontinuity | IV Instrumental Variables | Panel Fixed Effects | Dynamic Panel GMM | Mediation | Moderation
 
 </div>
 
+---
+
+## ✨ Features
+
+| Module | Methods |
+|--------|---------|
+| 🔵 Descriptive & Diagnostics | Descriptive stats, correlation matrix, normality test, VIF, heteroskedasticity, autocorrelation |
+| 🟡 Baseline Regression | OLS, individual/time/two-way FE, RE, Hausman test, panel unit root |
+| 🔴 Causal Inference | DID (parallel trend + 1000x placebo), staggered DID, PSM, RDD, IV/2SLS, dynamic panel GMM |
+| 🟢 Robustness | Winsorize, Bootstrap, placebo test, sample exclusion |
+| 🟣 Heterogeneity & Mechanism | Subgroup regression, quantile regression, mediation (Bootstrap), moderation |
+
+**🤖 Smart Recommendation**: Describe your research background, get a matched analysis path automatically.
+
+---
+
+## 🚀 Quick Start
+
+### Online (Recommended — no install)
+
+- 🤖 **ModelScope (China)**: https://modelscope.cn/studios/JackyCufe/EconKit/summary
+- 🤗 **HuggingFace (Global)**: https://huggingface.co/spaces/JackyCufe/econkit
+
+### Local
+
+```bash
+git clone https://github.com/JackyCufe/econkit.git
+cd econkit
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Open http://localhost:8501 in your browser.
+
+---
+
+## 📊 Data Format
+
+Supports **Excel / CSV**, panel data in long format:
+
+| firm_id | year | treat | post | did | tfp  | size  | lev  |
+|---------|------|-------|------|-----|------|-------|------|
+| 1       | 2010 | 0     | 0    | 0   | 2.15 | 10.23 | 0.32 |
+| 2       | 2015 | 1     | 1    | 1   | 2.58 | 11.30 | 0.43 |
+
+> Unsure about format? Built-in sample data lets you explore the full workflow first.
+
+---
+
+## ✅ Are the Results Reliable?
+
+EconKit uses academically validated Python libraries:
+
+| Library | Purpose |
+|---------|---------|
+| `statsmodels` | OLS, panel regression, time series |
+| `linearmodels` | FE, RE, IV/2SLS |
+| `econml` | DID, causal inference |
+| `scikit-learn` | PSM propensity score estimation |
+| `rdrobust` | RDD |
+
+**Replication verified**: Classic DID results reproduced with publicly available panel data, coefficient error within 0.01. For critical conclusions, consult a professional econometrician.
+
+---
+
+## ☕ Support
+
+If EconKit helped you, consider buying me a coffee ☕
+
+**👉 [Support on Aifadian](https://ifdian.net/a/jackycufe)**
+
+A ⭐ Star also helps more students discover this tool!
+
+---
+
+## 📝 Changelog
+
+- **v1.0.0** (2026-03-14) — MVP release, full econometrics method suite
+
+---
 ---
 
 ## ✨ 功能概览
@@ -70,7 +152,7 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-浏览器打开 http://localhost:8501 即可使用
+浏览器打开 http://localhost:8501 即可使用。
 
 ---
 
@@ -81,64 +163,17 @@ streamlit run app.py
 | firm_id | year | treat | post | did | tfp  | size  | lev  |
 |---------|------|-------|------|-----|------|-------|------|
 | 1       | 2010 | 0     | 0    | 0   | 2.15 | 10.23 | 0.32 |
-| 1       | 2015 | 0     | 1    | 0   | 2.28 | 10.45 | 0.30 |
-| 2       | 2010 | 1     | 0    | 0   | 2.33 | 11.10 | 0.45 |
 | 2       | 2015 | 1     | 1    | 1   | 2.58 | 11.30 | 0.43 |
 
-> 不确定格式？上传后可直接使用内置示例数据体验完整流程
-
----
-
-## 🎯 分析流程建议
-
-1. **首页** → 上传数据，检查数据结构
-2. **智能引导** → 描述研究背景，获取方法推荐路径
-3. **实证分析** → 按顺序执行各分析，实时查看图表
-4. **下载报告** → 一键生成 PDF 汇总报告
-
----
-
-## 📁 项目结构
-
-```
-econkit/
-├── app.py                    # Streamlit 主入口
-├── requirements.txt
-├── core/
-│   ├── data_loader.py        # 数据上传、清洗、验证
-│   ├── smart_recommender.py  # 智能方法推荐引擎
-│   └── report_generator.py  # PDF 报告生成
-├── analysis/
-│   ├── descriptive.py        # 描述统计 + 诊断检验
-│   ├── panel_regression.py   # OLS/FE/RE/TWFE/Hausman
-│   ├── causal_did.py         # DID + 平行趋势 + 安慰剂
-│   ├── causal_psm.py         # PSM 倾向得分匹配
-│   ├── causal_rdd.py         # RDD 断点回归
-│   ├── causal_iv.py          # IV/2SLS + 内生性检验
-│   ├── robustness.py         # 稳健性检验
-│   └── heterogeneity.py      # 异质性 + 中介 + 调节
-└── ui/
-    ├── pages/                # 四大页面
-    └── components/           # 公共组件
-```
+> 不确定格式？上传后可直接使用内置示例数据体验完整流程。
 
 ---
 
 ## ✅ 结果可信吗？
 
-EconKit 底层使用经过学术界广泛验证的 Python 库：
+EconKit 底层使用经过学术界广泛验证的 Python 库（statsmodels / linearmodels / econml / scikit-learn / rdrobust），计算逻辑本身可信。
 
-| 库 | 用途 |
-|---|---|
-| `statsmodels` | OLS、面板回归、时间序列 |
-| `linearmodels` | 固定效应、随机效应、IV/2SLS |
-| `econml` | 双重差分、因果推断 |
-| `scikit-learn` | PSM 倾向得分估计 |
-| `rdrobust` | RDD 断点回归 |
-
-这些库被大量学术论文和研究机构使用，计算逻辑本身是可信的。
-
-**实测复现验证**：我们用连享会公开的面板数据复现了经典 DID 论文的系数，误差在 0.01 以内。重要结论仍建议咨询专业计量经济学家。
+**实测复现验证**：用连享会公开面板数据复现经典 DID 论文系数，误差在 0.01 以内。重要结论仍建议咨询专业计量经济学家。
 
 ---
 
@@ -149,12 +184,6 @@ EconKit 底层使用经过学术界广泛验证的 Python 库：
 **👉 [爱发电支持](https://ifdian.net/a/jackycufe)**
 
 也欢迎点个 ⭐ Star，让更多同学发现这个工具！
-
----
-
-## 📝 版本历史
-
-- **v1.0.0** (2026-03-14) - MVP 版本发布，支持全套计量经济学分析方法
 
 ---
 
